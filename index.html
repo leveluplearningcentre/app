@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Level Up Learning Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pink:#F7B6C2;--pink-soft:#FDE8ED;--pink-dark:#E891A5;--pink-ink:#C26D84;
+  --blue:#A7C7E7;--blue-soft:#EAF3FB;--blue-dark:#7FA8D9;--blue-ink:#5E87B8;
+  --mint:#BFE6D2;--mint-soft:#EAF8F0;--mint-ink:#3E8A65;
+  --lilac:#D9C7F0;--lilac-soft:#F4EEFB;--lilac-ink:#8A6FB5;
+  --yellow:#FFE3A3;--yellow-soft:#FFF6E3;--yellow-ink:#B98A2E;
+  --cream:#FFFBF7;--white:#FFFFFF;--ink-strong:#443E52;--muted:#9A93A8;--border:#F0E4E8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--ink-strong);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;
+  background-image:radial-gradient(circle at 15% 10%,rgba(247,182,194,.18) 0,transparent 30%),radial-gradient(circle at 85% 25%,rgba(167,199,231,.20) 0,transparent 32%),radial-gradient(circle at 50% 95%,rgba(191,230,210,.15) 0,transparent 34%)}
+
+.cloud{position:absolute;background:var(--white);border-radius:999px;opacity:.9;box-shadow:0 4px 18px rgba(167,199,231,.3)}
+.cloud::before,.cloud::after{content:'';position:absolute;background:inherit;border-radius:50%}
+.cloud.c1{width:120px;height:40px;top:8%;left:8%}
+.cloud.c1::before{width:50px;height:50px;top:-22px;left:18px}
+.cloud.c1::after{width:34px;height:34px;top:-14px;left:62px}
+.cloud.c2{width:90px;height:32px;top:16%;right:10%}
+.cloud.c2::before{width:38px;height:38px;top:-16px;left:14px}
+.cloud.c2::after{width:26px;height:26px;top:-10px;left:46px}
+.cloud.c3{width:100px;height:34px;bottom:12%;left:14%}
+.cloud.c3::before{width:42px;height:42px;top:-18px;left:16px}
+.cloud.c3::after{width:28px;height:28px;top:-11px;left:52px}
+.spark{position:absolute;font-size:18px;animation:tw 2.4s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.25;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
+
+.logo{width:130px;height:auto;margin-bottom:18px;border-radius:20px}
+h1{font-family:'Baloo 2',cursive;font-size:30px;font-weight:800;text-align:center;line-height:1.2}
+h1 .pk{color:var(--pink-ink)} h1 .bl{color:var(--blue-ink)}
+.sub{font-size:14px;color:var(--muted);font-weight:700;margin:8px 0 6px;text-align:center}
+.services{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:14px 0 30px}
+.svc{padding:6px 16px;border-radius:999px;font-size:13px;font-weight:800;border:2px dashed transparent}
+.svc.tutor{background:var(--blue-soft);color:var(--blue-ink);border-color:var(--blue)}
+.svc.swim{background:var(--mint-soft);color:var(--mint-ink);border-color:var(--mint)}
+.svc.art{background:var(--yellow-soft);color:var(--yellow-ink);border-color:var(--yellow)}
+.svc.mandarin{background:var(--lilac-soft);color:var(--lilac-ink);border-color:var(--lilac)}
+
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;width:100%;max-width:640px}
+.menu a{background:var(--white);border:2px dashed var(--pink);border-radius:22px;padding:26px 18px;text-align:center;text-decoration:none;color:var(--ink-strong);transition:all .2s;box-shadow:0 4px 18px rgba(232,145,165,.12)}
+.menu a:hover{transform:translateY(-4px);border-color:var(--pink-dark);box-shadow:0 8px 24px rgba(232,145,165,.25)}
+.menu a.blue{border-color:var(--blue)} .menu a.blue:hover{border-color:var(--blue-dark)}
+.menu .ic{font-size:34px;margin-bottom:10px}
+.menu .ti{font-family:'Baloo 2',cursive;font-weight:800;font-size:17px}
+.menu .de{font-size:12px;color:var(--muted);font-weight:700;margin-top:4px}
+.tagline{margin-top:34px;font-style:italic;font-weight:800;font-size:14px;color:var(--blue-ink);text-align:center}
+.tagline .pk{color:var(--pink-ink)}
+</style>
+</head>
+<body>
+<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+<span class="spark" style="top:22%;left:24%;color:var(--pink)">✦</span>
+<span class="spark" style="top:30%;right:20%;color:var(--blue);animation-delay:.6s">✦</span>
+<span class="spark" style="bottom:24%;right:28%;color:var(--yellow-ink);animation-delay:1.2s">✧</span>
+<span class="spark" style="bottom:30%;left:20%;color:var(--lilac-ink);animation-delay:1.8s">✦</span>
+
+<img src="logo.png" alt="Level Up Learning Center" class="logo" onerror="this.style.display='none'">
+<h1><span class="pk">Level Up</span> <span class="bl">Learning Center</span></h1>
+<div class="sub">Sistem Manajemen Bimbel ✦ Laporan · Absensi · Invoice · Fee Guru</div>
+<div class="services">
+  <span class="svc tutor">📖 Tutor</span>
+  <span class="svc swim">🏊 Swim</span>
+  <span class="svc art">🎨 Art</span>
+  <span class="svc mandarin">🀄 Mandarin</span>
+</div>
+
+<div class="menu">
+  <a href="admin.html">
+    <div class="ic">🔑</div>
+    <div class="ti">Admin Panel</div>
+    <div class="de">Murid · Absensi · Invoice · Report PDF · Fee Guru</div>
+  </a>
+  <a href="guru.html" class="blue">
+    <div class="ic">👩‍🏫</div>
+    <div class="ti">Portal Guru</div>
+    <div class="de">Isi laporan harian + bintang progress murid</div>
+  </a>
+</div>
+
+<div class="tagline">☆ Little steps today, big <span class="pk">LEVEL UP</span> tomorrow ☆</div>
+</body>
+</html>
