@@ -275,6 +275,11 @@ tr:hover td{background:#FFFAF8}
         <table><thead><tr><th>Tanggal</th><th>Murid</th><th>Guru</th><th>Program</th><th>Materi</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody id="laporanTbody"><tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr></tbody></table>
       </div>
+      <div id="lapPager" style="display:none;justify-content:center;align-items:center;gap:14px;margin-top:14px">
+        <button class="btn btn-blue btn-sm" id="lapPrev" onclick="lapPageGo(-1)">◀ Sebelumnya</button>
+        <span id="lapPageInfo" style="font-weight:800;font-size:13px;color:var(--muted)">—</span>
+        <button class="btn btn-blue btn-sm" id="lapNext" onclick="lapPageGo(1)">Berikutnya ▶</button>
+      </div>
     </div>
   </div>
 
@@ -462,12 +467,17 @@ window.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function refreshBaseData(){
-  try{
-    [muridData, guruData, kelasData, sesiData] = await Promise.all([
-      API.getMurid({}), API.getGuru(), API.getKelas({}), API.getSesiAllKelas(),
-    ]);
-    populateSelects();
-  }catch(e){ showToast('Gagal memuat data: '+e.message,'error'); }
+  // Load tiap data terpisah — kalau satu gagal, yang lain tetap tampil
+  const hasil = await Promise.allSettled([
+    API.getMurid({}), API.getGuru(), API.getKelas({}), API.getSesiAllKelas(),
+  ]);
+  muridData = hasil[0].status==='fulfilled' ? hasil[0].value : muridData;
+  guruData  = hasil[1].status==='fulfilled' ? hasil[1].value : guruData;
+  kelasData = hasil[2].status==='fulfilled' ? hasil[2].value : kelasData;
+  sesiData  = hasil[3].status==='fulfilled' ? hasil[3].value : sesiData;
+  const gagal = hasil.filter(h=>h.status==='rejected');
+  if(gagal.length) showToast('Sebagian data gagal dimuat: '+gagal[0].reason.message,'error');
+  populateSelects();
 }
 
 function populateSelects(){
@@ -796,23 +806,52 @@ async function loadLaporan(){
     const pb = document.getElementById('pendingBadge');
     pb.style.display = nPending ? 'inline-block' : 'none';
     pb.textContent = nPending + ' menunggu approval';
-    tbody.innerHTML = rows.length ? rows.map((r,i)=>{
-      const materi = LU.parseMateri(r.materi_json);
-      const avg = materi.length ? Math.round(materi.reduce((a,x)=>a+(x.s||0),0)/materi.length) : 0;
-      const pending = r.status==='pending';
-      return `<tr style="${pending?'background:var(--yellow-soft)':''}"><td>${LU.fmtDate(r.tanggal)}</td><td><strong>${r.nama_murid||'—'}</strong></td>
-      <td>${r.nama_guru||'—'}</td><td>${progBadge(r.program||'Tutor')}</td>
-      <td>${materi.length} materi <span class="stars">${LU.stars(avg)}</span></td>
-      <td><span class="badge ${pending?'bg-yellow':'bg-mint'}">${pending?'⏳ pending':'✅ approved'}</span></td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" title="Lihat" onclick="lihatLaporan(${i})">👁️</button>
-        <button class="btn btn-ghost btn-sm" title="Edit (koreksi typo)" onclick="editLaporanModal(${i})">✏️</button>
-        ${pending?`<button class="btn btn-mint btn-sm" title="Approve" onclick="approveLaporan('${r.id}')">✅</button>`
-                 :`<button class="btn btn-blue btn-sm" title="Kirim WA ke ortu" onclick="kirimLapWA(${i})">💬</button>`}
-        <button class="btn btn-ghost btn-sm" onclick="hapusLaporan('${r.id}')">🗑️</button>
-      </td></tr>`;
-    }).join('') : '<tr><td colspan="7" class="empty">Belum ada laporan ✦</td></tr>';
+    lapPage = 1;
+    renderLapPage();
   }catch(e){ tbody.innerHTML='<tr><td colspan="7" class="empty">Gagal: '+e.message+'</td></tr>'; }
+}
+
+// ── Pagination laporan: 10 per halaman ──
+let lapPage = 1;
+const LAP_PER_PAGE = 10;
+function lapPageGo(delta){
+  const total = Math.max(1, Math.ceil((window._lapRows||[]).length / LAP_PER_PAGE));
+  lapPage = Math.min(total, Math.max(1, lapPage + delta));
+  renderLapPage();
+}
+function renderLapPage(){
+  const rows = window._lapRows || [];
+  const tbody = document.getElementById('laporanTbody');
+  const pager = document.getElementById('lapPager');
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Belum ada laporan ✦</td></tr>';
+    pager.style.display = 'none';
+    return;
+  }
+  const totalPages = Math.ceil(rows.length / LAP_PER_PAGE);
+  const start = (lapPage - 1) * LAP_PER_PAGE;
+  const slice = rows.slice(start, start + LAP_PER_PAGE);
+  tbody.innerHTML = slice.map((r,j)=>{
+    const i = start + j; // index absolut di _lapRows
+    const materi = LU.parseMateri(r.materi_json);
+    const avg = materi.length ? Math.round(materi.reduce((a,x)=>a+(x.s||0),0)/materi.length) : 0;
+    const pending = r.status==='pending';
+    return `<tr style="${pending?'background:var(--yellow-soft)':''}"><td>${LU.fmtDate(r.tanggal)}</td><td><strong>${r.nama_murid||'—'}</strong></td>
+    <td>${r.nama_guru||'—'}</td><td>${progBadge(r.program||'Tutor')}</td>
+    <td>${materi.length} materi <span class="stars">${LU.stars(avg)}</span></td>
+    <td><span class="badge ${pending?'bg-yellow':'bg-mint'}">${pending?'⏳ pending':'✅ approved'}</span></td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-ghost btn-sm" title="Lihat" onclick="lihatLaporan(${i})">👁️</button>
+      <button class="btn btn-ghost btn-sm" title="Edit (koreksi typo)" onclick="editLaporanModal(${i})">✏️</button>
+      ${pending?`<button class="btn btn-mint btn-sm" title="Approve" onclick="approveLaporan('${r.id}')">✅</button>`
+               :`<button class="btn btn-blue btn-sm" title="Kirim WA ke ortu" onclick="kirimLapWA(${i})">💬</button>`}
+      <button class="btn btn-ghost btn-sm" onclick="hapusLaporan('${r.id}')">🗑️</button>
+    </td></tr>`;
+  }).join('');
+  pager.style.display = totalPages > 1 ? 'flex' : 'none';
+  document.getElementById('lapPageInfo').textContent = `Hal. ${lapPage} / ${totalPages} · ${rows.length} laporan`;
+  document.getElementById('lapPrev').disabled = lapPage <= 1;
+  document.getElementById('lapNext').disabled = lapPage >= totalPages;
 }
 
 async function approveLaporan(id){

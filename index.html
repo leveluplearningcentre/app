@@ -84,6 +84,18 @@ h1 .pk{color:var(--pink-ink)} h1 .bl{color:var(--blue-ink)}
 #lbPrev,#lbNext{position:absolute;top:50%;transform:translateY(-50%);background:var(--white);border:none;border-radius:999px;width:42px;height:42px;font-size:17px;font-weight:900;color:var(--pink-ink);cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 #lbPrev{left:16px} #lbNext{right:16px}
 
+/* TESTIMONI */
+.testi-wrap{width:100%;max-width:640px;margin:0 auto 40px}
+.testi-bubble{background:#0E6B5C;color:#EAF7F3;border-radius:18px 18px 18px 4px;padding:14px 18px;margin-bottom:14px;box-shadow:0 4px 14px rgba(14,107,92,.18);position:relative;max-width:88%}
+.testi-bubble:nth-child(even){margin-left:auto;border-radius:18px 18px 4px 18px}
+.testi-name{font-weight:900;font-size:13px;color:#FFE3A3;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.testi-msg{font-size:14px;font-weight:600;line-height:1.55}
+.testi-time{font-size:10px;color:#A8D5CB;text-align:right;margin-top:4px}
+.testi-hl{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;width:100%;max-width:640px;margin:18px auto 40px}
+.testi-hl div{background:var(--white);border:2px dashed var(--mint);border-radius:14px;padding:11px 14px;font-size:12.5px;font-weight:700;color:var(--mint-ink)}
+.cta-trial{display:inline-flex;align-items:center;gap:8px;background:var(--pink-soft);border:2px dashed var(--pink);color:var(--pink-ink);padding:13px 26px;border-radius:999px;font-size:14px;font-weight:900;text-decoration:none;transition:all .2s;margin:0 auto 40px;font-family:'Baloo 2',cursive}
+.cta-trial:hover{transform:translateY(-2px);background:var(--pink);color:#fff}
+
 /* CONTACT */
 .contact{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;width:100%;margin-bottom:8px}
 .contact a{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:800;text-decoration:none;transition:all .2s;border:2px dashed transparent}
@@ -178,6 +190,34 @@ h1 .pk{color:var(--pink-ink)} h1 .bl{color:var(--blue-ink)}
   <div class="sec-title">Our Moments 📸</div>
   <div class="sec-sub">Keseruan belajar bersama di Level Up ✦</div>
   <div class="gallery" id="gallery"></div>
+
+  <!-- TESTIMONI -->
+  <div class="sec-title">Parents Trust 💙</div>
+  <div class="sec-sub">Melihat anak berkembang itu kebahagiaan terbesar untuk parents 🧡</div>
+  <div class="testi-wrap">
+    <div class="testi-bubble">
+      <div class="testi-name">⭐ Parent Ezio</div>
+      <div class="testi-msg">Keren. Hebat Zizo. Thank u ms</div>
+      <div class="testi-time">18.25 ✓✓</div>
+    </div>
+    <div class="testi-bubble">
+      <div class="testi-name">⭐ Parent Shinazz</div>
+      <div class="testi-msg">MasyaAllah uda bisa dia yaa</div>
+      <div class="testi-time">18.00 ✓✓</div>
+    </div>
+    <div class="testi-bubble">
+      <div class="testi-name">⭐ Parent Vava</div>
+      <div class="testi-msg">Wii keren udah ga pake pelampung ya coach</div>
+      <div class="testi-time">07.29 ✓✓</div>
+    </div>
+  </div>
+  <div class="testi-hl">
+    <div>✨ Anak yang takut air → jadi berani berenang</div>
+    <div>✨ Anak yang belum bisa baca → mulai percaya diri</div>
+    <div>✨ Motorik halus makin terlatih lewat art &amp; sensory</div>
+    <div>✨ Mulai ngobrol Mandarin di rumah</div>
+  </div>
+  <a class="cta-trial" href="https://wa.me/6285133136377?text=Halo%20Level%20Up%2C%20mau%20daftar%20trial%20class%20dong%20%F0%9F%98%8A" target="_blank">✦ Daftar Trial Class → Chat WA</a>
 
   <!-- CONTACT -->
   <div class="sec-title">Contact Us 💌</div>

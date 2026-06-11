@@ -222,7 +222,7 @@ function logout() {
 function renderAnakChips() {
   const box = document.getElementById('anakChips');
   box.innerHTML = anakList.length > 1
-    ? anakList.map(a => `<button class="anak-chip" id="chip-${a.id}" onclick="pilihAnak('${a.id}')">👧 ${a.nama}</button>`).join('')
+    ? anakList.map(a => `<button class="anak-chip" id="chip-${a.id}" onclick="pilihAnak('${a.id}')">${a.nama}</button>`).join('')
     : '';
 }
 

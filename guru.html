@@ -242,19 +242,22 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   addMateriRow();
 
-  try {
-    [guruData, kelasData, muridData, sesiData] = await Promise.all([
-      API.getGuru(),
-      API.getKelas({ aktif: 'aktif' }),
-      API.getMurid({ aktif: 'aktif' }),
-      API.getSesiAllKelas(),
-    ]);
-    populateGuru();
-  } catch (e) {
-    showToast('Gagal memuat data: ' + e.message, 'error');
-  } finally {
-    document.getElementById('loadingOverlay').style.display = 'none';
-  }
+  // Load tiap data terpisah — kalau satu gagal, yang lain tetap muncul
+  const hasil = await Promise.allSettled([
+    API.getGuru(),
+    API.getKelas({ aktif: 'aktif' }),
+    API.getMurid({ aktif: 'aktif' }),
+    API.getSesiAllKelas(),
+  ]);
+  guruData  = hasil[0].status === 'fulfilled' ? hasil[0].value : [];
+  kelasData = hasil[1].status === 'fulfilled' ? hasil[1].value : [];
+  muridData = hasil[2].status === 'fulfilled' ? hasil[2].value : [];
+  sesiData  = hasil[3].status === 'fulfilled' ? hasil[3].value : [];
+  const gagal = hasil.filter(h => h.status === 'rejected');
+  if (gagal.length) showToast('Sebagian data gagal dimuat: ' + gagal[0].reason.message, 'error');
+  populateGuru();
+  onGuruChange(); // default: tampilkan semua murid
+  document.getElementById('loadingOverlay').style.display = 'none';
   updateWA();
 });
 
@@ -268,9 +271,10 @@ function populateGuru() {
 function onGuruChange() {
   const gid = document.getElementById('guruSelect').value;
   const sel = document.getElementById('kelasSelect');
-  const list = kelasData.filter(k => k.guru_id === gid);
+  // Default (belum pilih guru): tampilkan SEMUA murid; setelah pilih guru: difilter
+  const list = gid ? kelasData.filter(k => k.guru_id === gid) : kelasData;
   sel.innerHTML = '<option value="">Pilih Murid / Kelas...</option>' +
-    list.map(k => `<option value="${k.id}">${k.nama_murid} · ${k.program} (${k.tipe})</option>`).join('');
+    list.map(k => `<option value="${k.id}">${k.nama_murid} · ${k.program} (${k.tipe})${gid ? '' : ' — ' + (k.nama_guru || '')}</option>`).join('');
   document.getElementById('kuotaPill').style.display = 'none';
   document.getElementById('historyCard').style.display = 'none';
   updateWA();
@@ -373,7 +377,7 @@ function updateWA() {
     : '—';
 
   document.getElementById('waText').textContent =
-`Hello mum / dads 👋✦
+`Hello parents 👋✦
 
 📋 Daily Report — Level Up Learning Center
 ${tglFmt}
