@@ -12,78 +12,208 @@
   --mint:#BFE6D2;--mint-soft:#EAF8F0;--mint-ink:#3E8A65;
   --lilac:#D9C7F0;--lilac-soft:#F4EEFB;--lilac-ink:#8A6FB5;
   --yellow:#FFE3A3;--yellow-soft:#FFF6E3;--yellow-ink:#B98A2E;
-  --cream:#FFFBF7;--white:#FFFFFF;--ink-strong:#443E52;--muted:#9A93A8;--border:#F0E4E8;
+  --cream:#FFFBF7;--white:#FFFFFF;--ink:#5B5566;--ink-strong:#443E52;--muted:#9A93A8;--border:#F0E4E8;
+  --green:#5BBD8B;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--ink-strong);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden;
-  background-image:radial-gradient(circle at 15% 10%,rgba(247,182,194,.18) 0,transparent 30%),radial-gradient(circle at 85% 25%,rgba(167,199,231,.20) 0,transparent 32%),radial-gradient(circle at 50% 95%,rgba(191,230,210,.15) 0,transparent 34%)}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--ink-strong);min-height:100vh;position:relative;overflow-x:hidden;
+  background-image:radial-gradient(circle at 15% 6%,rgba(247,182,194,.18) 0,transparent 30%),radial-gradient(circle at 85% 14%,rgba(167,199,231,.20) 0,transparent 32%),radial-gradient(circle at 50% 90%,rgba(191,230,210,.15) 0,transparent 34%)}
+h1,h2,h3{font-family:'Baloo 2',cursive}
 
-.cloud{position:absolute;background:var(--white);border-radius:999px;opacity:.9;box-shadow:0 4px 18px rgba(167,199,231,.3)}
+.cloud{position:absolute;background:var(--white);border-radius:999px;opacity:.9;box-shadow:0 4px 18px rgba(167,199,231,.3);pointer-events:none}
 .cloud::before,.cloud::after{content:'';position:absolute;background:inherit;border-radius:50%}
-.cloud.c1{width:120px;height:40px;top:8%;left:8%}
+.cloud.c1{width:120px;height:40px;top:40px;left:6%}
 .cloud.c1::before{width:50px;height:50px;top:-22px;left:18px}
 .cloud.c1::after{width:34px;height:34px;top:-14px;left:62px}
-.cloud.c2{width:90px;height:32px;top:16%;right:10%}
+.cloud.c2{width:90px;height:32px;top:110px;right:8%}
 .cloud.c2::before{width:38px;height:38px;top:-16px;left:14px}
 .cloud.c2::after{width:26px;height:26px;top:-10px;left:46px}
-.cloud.c3{width:100px;height:34px;bottom:12%;left:14%}
-.cloud.c3::before{width:42px;height:42px;top:-18px;left:16px}
-.cloud.c3::after{width:28px;height:28px;top:-11px;left:52px}
-.spark{position:absolute;font-size:18px;animation:tw 2.4s ease-in-out infinite}
+.spark{position:absolute;font-size:18px;animation:tw 2.4s ease-in-out infinite;pointer-events:none}
 @keyframes tw{0%,100%{opacity:.25;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
 
-.logo{width:130px;height:auto;margin-bottom:18px;border-radius:20px}
-h1{font-family:'Baloo 2',cursive;font-size:30px;font-weight:800;text-align:center;line-height:1.2}
+.wrap{max-width:880px;margin:0 auto;padding:40px 20px 60px;display:flex;flex-direction:column;align-items:center}
+.logo{width:120px;height:auto;margin-bottom:16px;border-radius:20px}
+h1{font-size:30px;font-weight:800;text-align:center;line-height:1.2}
 h1 .pk{color:var(--pink-ink)} h1 .bl{color:var(--blue-ink)}
-.sub{font-size:14px;color:var(--muted);font-weight:700;margin:8px 0 6px;text-align:center}
-.services{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:14px 0 30px}
-.svc{padding:6px 16px;border-radius:999px;font-size:13px;font-weight:800;border:2px dashed transparent}
-.svc.tutor{background:var(--blue-soft);color:var(--blue-ink);border-color:var(--blue)}
-.svc.swim{background:var(--mint-soft);color:var(--mint-ink);border-color:var(--mint)}
-.svc.art{background:var(--yellow-soft);color:var(--yellow-ink);border-color:var(--yellow)}
-.svc.mandarin{background:var(--lilac-soft);color:var(--lilac-ink);border-color:var(--lilac)}
+.sub{font-size:14px;color:var(--muted);font-weight:700;margin:8px 0 22px;text-align:center}
 
-.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;width:100%;max-width:640px}
-.menu a{background:var(--white);border:2px dashed var(--pink);border-radius:22px;padding:26px 18px;text-align:center;text-decoration:none;color:var(--ink-strong);transition:all .2s;box-shadow:0 4px 18px rgba(232,145,165,.12)}
+/* PORTAL */
+.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;width:100%;max-width:620px;margin-bottom:36px}
+.menu a{background:var(--white);border:2px dashed var(--pink);border-radius:22px;padding:22px 16px;text-align:center;text-decoration:none;color:var(--ink-strong);transition:all .2s;box-shadow:0 4px 18px rgba(232,145,165,.12)}
 .menu a:hover{transform:translateY(-4px);border-color:var(--pink-dark);box-shadow:0 8px 24px rgba(232,145,165,.25)}
 .menu a.blue{border-color:var(--blue)} .menu a.blue:hover{border-color:var(--blue-dark)}
-.menu .ic{font-size:34px;margin-bottom:10px}
-.menu .ti{font-family:'Baloo 2',cursive;font-weight:800;font-size:17px}
-.menu .de{font-size:12px;color:var(--muted);font-weight:700;margin-top:4px}
-.tagline{margin-top:34px;font-style:italic;font-weight:800;font-size:14px;color:var(--blue-ink);text-align:center}
+.menu a.mint{border-color:var(--mint)} .menu a.mint:hover{border-color:var(--mint-ink)}
+.menu .ic{font-size:30px;margin-bottom:8px}
+.menu .ti{font-family:'Baloo 2',cursive;font-weight:800;font-size:16px}
+.menu .de{font-size:11.5px;color:var(--muted);font-weight:700;margin-top:4px}
+
+/* SERVICES */
+.sec-title{font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;margin-bottom:4px;text-align:center}
+.sec-sub{font-size:13px;color:var(--muted);font-weight:700;margin-bottom:20px;text-align:center}
+.services{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;width:100%;margin-bottom:40px}
+.svc-card{background:var(--white);border-radius:22px;padding:22px;border:2px dashed transparent;box-shadow:0 4px 18px rgba(167,199,231,.12);position:relative;overflow:hidden}
+.svc-card.tutor{border-color:var(--blue)}
+.svc-card.swim{border-color:var(--mint)}
+.svc-card.art{border-color:var(--yellow)}
+.svc-card.mandarin{border-color:var(--lilac)}
+.svc-card h3{font-size:18px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.svc-card.tutor h3{color:var(--blue-ink)}
+.svc-card.swim h3{color:var(--mint-ink)}
+.svc-card.art h3{color:var(--yellow-ink)}
+.svc-card.mandarin h3{color:var(--lilac-ink)}
+.svc-card p{font-size:13px;font-weight:600;color:var(--ink);line-height:1.65;margin-bottom:12px}
+.svc-tags{display:flex;flex-wrap:wrap;gap:6px}
+.svc-tag{font-size:11px;font-weight:800;padding:4px 11px;border-radius:999px}
+.tutor .svc-tag{background:var(--blue-soft);color:var(--blue-ink)}
+.swim .svc-tag{background:var(--mint-soft);color:var(--mint-ink)}
+.art .svc-tag{background:var(--yellow-soft);color:var(--yellow-ink)}
+.mandarin .svc-tag{background:var(--lilac-soft);color:var(--lilac-ink)}
+.svc-spark{position:absolute;top:14px;right:16px;font-size:16px;opacity:.5}
+
+/* GALLERY */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;width:100%;margin-bottom:40px}
+.g-item{background:var(--white);padding:8px 8px 10px;border-radius:14px;box-shadow:0 4px 14px rgba(232,145,165,.18);cursor:pointer;transition:all .2s;border:2px dashed var(--pink-soft)}
+.g-item:nth-child(3n){transform:rotate(1.5deg)}
+.g-item:nth-child(3n+1){transform:rotate(-1.5deg)}
+.g-item:hover{transform:rotate(0) scale(1.05);border-color:var(--pink);z-index:2}
+.g-item img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:9px;display:block}
+#lightbox{position:fixed;inset:0;background:rgba(68,62,82,.85);z-index:999;display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
+#lightbox.open{display:flex}
+#lightbox img{max-width:92vw;max-height:88vh;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.4);border:4px solid var(--white)}
+#lbClose{position:absolute;top:18px;right:22px;background:var(--white);border:none;border-radius:999px;width:38px;height:38px;font-size:16px;font-weight:900;color:var(--ink-strong);cursor:pointer}
+#lbPrev,#lbNext{position:absolute;top:50%;transform:translateY(-50%);background:var(--white);border:none;border-radius:999px;width:42px;height:42px;font-size:17px;font-weight:900;color:var(--pink-ink);cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#lbPrev{left:16px} #lbNext{right:16px}
+
+/* CONTACT */
+.contact{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;width:100%;margin-bottom:8px}
+.contact a{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:800;text-decoration:none;transition:all .2s;border:2px dashed transparent}
+.contact a:hover{transform:translateY(-2px)}
+.contact .wa{background:#E9F9EF;color:#2E9E5B;border-color:#A8E6C1}
+.contact .map{background:var(--blue-soft);color:var(--blue-ink);border-color:var(--blue)}
+.contact .ig{background:var(--pink-soft);color:var(--pink-ink);border-color:var(--pink)}
+.tagline{margin-top:26px;font-style:italic;font-weight:800;font-size:14px;color:var(--blue-ink);text-align:center}
 .tagline .pk{color:var(--pink-ink)}
 </style>
 </head>
 <body>
-<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
-<span class="spark" style="top:22%;left:24%;color:var(--pink)">✦</span>
-<span class="spark" style="top:30%;right:20%;color:var(--blue);animation-delay:.6s">✦</span>
-<span class="spark" style="bottom:24%;right:28%;color:var(--yellow-ink);animation-delay:1.2s">✧</span>
-<span class="spark" style="bottom:30%;left:20%;color:var(--lilac-ink);animation-delay:1.8s">✦</span>
+<div class="cloud c1"></div><div class="cloud c2"></div>
+<span class="spark" style="top:70px;left:26%;color:var(--pink)">✦</span>
+<span class="spark" style="top:130px;right:22%;color:var(--blue);animation-delay:.6s">✦</span>
+<span class="spark" style="top:300px;left:10%;color:var(--yellow-ink);animation-delay:1.2s">✧</span>
+<span class="spark" style="top:420px;right:8%;color:var(--lilac-ink);animation-delay:1.8s">✦</span>
 
-<img src="logo.png" alt="Level Up Learning Center" class="logo" onerror="this.style.display='none'">
-<h1><span class="pk">Level Up</span> <span class="bl">Learning Center</span></h1>
-<div class="sub">Sistem Manajemen Bimbel ✦ Laporan · Absensi · Invoice · Fee Guru</div>
-<div class="services">
-  <span class="svc tutor">📖 Tutor</span>
-  <span class="svc swim">🏊 Swim</span>
-  <span class="svc art">🎨 Art</span>
-  <span class="svc mandarin">🀄 Mandarin</span>
+<div class="wrap">
+  <img src="logo.png" alt="Level Up Learning Center" class="logo" onerror="this.style.display='none'">
+  <h1><span class="pk">Level Up</span> <span class="bl">Learning Center</span></h1>
+  <div class="sub">Tutor ✦ Swim ✦ Art ✦ Mandarin</div>
+
+  <!-- PORTAL -->
+  <div class="menu">
+    <a href="admin.html">
+      <div class="ic">🔑</div>
+      <div class="ti">Admin Panel</div>
+      <div class="de">Murid · Absensi · Invoice · Report · Fee Guru</div>
+    </a>
+    <a href="guru.html" class="blue">
+      <div class="ic">👩‍🏫</div>
+      <div class="ti">Portal Guru</div>
+      <div class="de">Isi laporan harian + bintang progress</div>
+    </a>
+    <a href="ortu.html" class="mint">
+      <div class="ic">👨‍👩‍👧</div>
+      <div class="ti">Portal Orang Tua</div>
+      <div class="de">Laporan belajar · progres sesi · tagihan</div>
+    </a>
+  </div>
+
+  <!-- SERVICES -->
+  <div class="sec-title">Our Programs ✦</div>
+  <div class="sec-sub">Empat program seru untuk menemani si kecil bertumbuh</div>
+  <div class="services">
+    <div class="svc-card tutor">
+      <span class="svc-spark">✦</span>
+      <h3>📚 Tutor Class</h3>
+      <p>Personalized academic support for Kindergarten, Primary, and Secondary students. Lessons are tailored to each student's learning needs and curriculum, helping them build confidence and achieve their academic goals.</p>
+      <div class="svc-tags">
+        <span class="svc-tag">Kindergarten • Primary • Secondary</span>
+        <span class="svc-tag">Private &amp; Semi-Private</span>
+        <span class="svc-tag">Center-Based / Home Service</span>
+        <span class="svc-tag">Cambridge • IB • National Curriculum</span>
+      </div>
+    </div>
+    <div class="svc-card swim">
+      <span class="svc-spark">✦</span>
+      <h3>🏊 Swimming Class</h3>
+      <p>Swimming lessons designed to develop water confidence, safety skills, and proper swimming techniques in a supportive learning environment.</p>
+      <div class="svc-tags">
+        <span class="svc-tag">Kids (Age 3–15)</span>
+        <span class="svc-tag">Women (Age 15+)</span>
+        <span class="svc-tag">Private &amp; Semi-Private</span>
+        <span class="svc-tag">Center-Based / Home Service</span>
+      </div>
+    </div>
+    <div class="svc-card art">
+      <span class="svc-spark">✦</span>
+      <h3>🎨 Art Class</h3>
+      <p>A creative and engaging program that encourages self-expression, imagination, and fine motor development through fun art activities and projects.</p>
+      <div class="svc-tags">
+        <span class="svc-tag">Age 3–8</span>
+        <span class="svc-tag">Private &amp; Semi-Private</span>
+        <span class="svc-tag">Center-Based / Home Service</span>
+      </div>
+    </div>
+    <div class="svc-card mandarin">
+      <span class="svc-spark">✦</span>
+      <h3>🇨🇳 Mandarin Class</h3>
+      <p>Interactive Mandarin lessons that help young learners build a strong foundation in listening, speaking, reading, and writing through age-appropriate activities.</p>
+      <div class="svc-tags">
+        <span class="svc-tag">Kindergarten • Primary</span>
+        <span class="svc-tag">Private &amp; Semi-Private</span>
+        <span class="svc-tag">Center-Based Learning</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- GALLERY -->
+  <div class="sec-title">Our Moments 📸</div>
+  <div class="sec-sub">Keseruan belajar bersama di Level Up ✦</div>
+  <div class="gallery" id="gallery"></div>
+
+  <!-- CONTACT -->
+  <div class="sec-title">Contact Us 💌</div>
+  <div class="sec-sub">Yuk tanya-tanya jadwal &amp; program, kami siap bantu!</div>
+  <div class="contact">
+    <a class="wa" href="https://wa.me/6285133136377" target="_blank">💬 WhatsApp +62 851-3313-6377</a>
+    <a class="map" href="https://maps.app.goo.gl/C2ookBxukgaWJw6W8" target="_blank">📍 Google Maps</a>
+    <a class="ig" href="https://instagram.com/levelup.learningcenter" target="_blank">📸 @levelup.learningcenter</a>
+  </div>
+
+  <div class="tagline">☆ Little steps today, big <span class="pk">LEVEL UP</span> tomorrow ☆</div>
 </div>
 
-<div class="menu">
-  <a href="admin.html">
-    <div class="ic">🔑</div>
-    <div class="ti">Admin Panel</div>
-    <div class="de">Murid · Absensi · Invoice · Report PDF · Fee Guru</div>
-  </a>
-  <a href="guru.html" class="blue">
-    <div class="ic">👩‍🏫</div>
-    <div class="ti">Portal Guru</div>
-    <div class="de">Isi laporan harian + bintang progress murid</div>
-  </a>
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="if(event.target===this)closeLb()">
+  <button id="lbClose" onclick="closeLb()">✕</button>
+  <button id="lbPrev" onclick="lbGo(-1);event.stopPropagation()">◀</button>
+  <img id="lbImg" src="" alt="Dokumentasi Level Up">
+  <button id="lbNext" onclick="lbGo(1);event.stopPropagation()">▶</button>
 </div>
 
-<div class="tagline">☆ Little steps today, big <span class="pk">LEVEL UP</span> tomorrow ☆</div>
+<script>
+const FOTO = Array.from({length:19}, (_,i)=>`galeri-${String(i+1).padStart(2,'0')}.jpg`);
+let lbIdx = 0;
+document.getElementById('gallery').innerHTML = FOTO.map((f,i)=>
+  `<div class="g-item" onclick="openLb(${i})"><img src="${f}" loading="lazy" alt="Dokumentasi Level Up ${i+1}" onerror="this.parentElement.style.display='none'"></div>`
+).join('');
+function openLb(i){ lbIdx=i; document.getElementById('lbImg').src=FOTO[i]; document.getElementById('lightbox').classList.add('open'); }
+function closeLb(){ document.getElementById('lightbox').classList.remove('open'); }
+function lbGo(d){ lbIdx=(lbIdx+d+FOTO.length)%FOTO.length; document.getElementById('lbImg').src=FOTO[lbIdx]; }
+document.addEventListener('keydown', e=>{
+  if(!document.getElementById('lightbox').classList.contains('open')) return;
+  if(e.key==='Escape') closeLb();
+  if(e.key==='ArrowLeft') lbGo(-1);
+  if(e.key==='ArrowRight') lbGo(1);
+});
+</script>
 </body>
 </html>
