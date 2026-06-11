@@ -26,8 +26,10 @@ input,select,textarea,button{font-family:'Nunito',sans-serif}
 .app-title{font-family:'Baloo 2',cursive;font-size:18px;font-weight:800;color:var(--pink-ink);line-height:1}
 .app-sub{font-size:11px;color:var(--blue-ink);font-weight:700;margin-top:2px}
 .header-badge{margin-left:auto;background:var(--mint-soft);color:var(--mint-ink);padding:5px 14px;border-radius:999px;font-size:11px;font-weight:800;border:1.5px solid var(--mint)}
+.logout-btn{background:none;border:1.5px solid var(--border);border-radius:999px;padding:5px 12px;font-size:11px;font-weight:800;color:var(--muted);cursor:pointer}
+.logout-btn:hover{color:var(--red);border-color:var(--red)}
 
-.hero{padding:28px 20px 32px;text-align:center;position:relative;overflow:hidden}
+.hero{padding:28px 20px 24px;text-align:center;position:relative;overflow:hidden}
 .hero h1{font-family:'Baloo 2',cursive;font-size:24px;color:var(--ink-strong);margin-bottom:6px}
 .hero h1 .hl{color:var(--pink-ink)}
 .hero p{font-size:13px;color:var(--muted);font-weight:600}
@@ -40,14 +42,18 @@ input,select,textarea,button{font-family:'Nunito',sans-serif}
 .spark.s2{color:var(--blue);animation-delay:.7s}
 @keyframes tw{0%,100%{opacity:.25;transform:scale(.85)}50%{opacity:1;transform:scale(1.12)}}
 
-#loadingOverlay{position:fixed;inset:0;background:rgba(255,251,247,.92);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#loadingOverlay{position:fixed;inset:0;background:rgba(255,251,247,.92);z-index:999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
 .spinner{width:40px;height:40px;border:4px solid var(--pink-soft);border-top-color:var(--pink-dark);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #loadingOverlay p{color:var(--pink-ink);font-weight:800;font-size:14px}
 
 main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
 .card{background:var(--white);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:0 3px 16px rgba(232,145,165,.10);border:1.5px solid var(--border)}
-.card-title{font-family:'Baloo 2',cursive;font-weight:800;font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title{font-family:'Baloo 2',cursive;font-weight:800;font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+.form-field label{font-size:11px;font-weight:800;color:var(--muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.form-field input{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:13px;font-size:15px;font-weight:700;color:var(--ink-strong);outline:none}
+.form-field input:focus{border-color:var(--pink-dark)}
 
 .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800}
 .prog-Tutor{background:var(--blue-soft);color:var(--blue-ink)}
@@ -57,6 +63,15 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
 .bg-pink{background:var(--pink-soft);color:var(--pink-ink)}
 .bg-mint{background:var(--mint-soft);color:var(--mint-ink)}
 .bg-red{background:var(--red-soft);color:#C0564F}
+
+.anak-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:4px 0 8px}
+.anak-chip{padding:9px 20px;border-radius:999px;font-size:14px;font-weight:800;border:2px dashed var(--blue);background:var(--white);color:var(--blue-ink);cursor:pointer;transition:all .2s;font-family:'Baloo 2',cursive}
+.anak-chip:hover{transform:translateY(-2px)}
+.anak-chip.active{background:var(--pink-dark);border-color:var(--pink-dark);color:#fff;box-shadow:0 4px 12px rgba(232,145,165,.4)}
+
+.prog-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.prog-chip{padding:5px 14px;border-radius:999px;font-size:12px;font-weight:800;border:1.5px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer}
+.prog-chip.active{background:var(--blue-soft);border-color:var(--blue);color:var(--blue-ink)}
 
 .prog-bar{background:var(--pink-soft);border-radius:999px;height:14px;overflow:hidden;margin-top:6px}
 .prog-fill{background:linear-gradient(90deg,var(--blue-dark),var(--pink-dark));height:100%;border-radius:999px;transition:width .6s}
@@ -73,9 +88,10 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:12px;font-size:12.5px;font-weight:800;border:none;cursor:pointer}
 .btn-primary{background:var(--pink-dark);color:#fff}.btn-primary:hover{background:var(--pink-ink)}
 .btn-blue{background:var(--blue-soft);color:var(--blue-ink);border:1.5px solid var(--blue)}
+.btn-full{width:100%;justify-content:center;padding:13px;font-size:14px}
 
 .empty-state{text-align:center;padding:24px;color:var(--muted);font-size:13px;font-weight:600}
-.err-box{background:var(--red-soft);border:2px dashed #F5C2C2;border-radius:16px;padding:18px;text-align:center;color:#C0564F;font-weight:800;margin:20px}
+.login-err{background:var(--red-soft);border:2px dashed #F5C2C2;border-radius:13px;padding:11px 14px;font-size:13px;color:#C0564F;font-weight:800;margin-bottom:12px;display:none}
 
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(40px);background:var(--ink-strong);color:#fff;padding:10px 22px;border-radius:999px;font-size:13px;font-weight:800;z-index:9999;transition:all .3s;white-space:nowrap;opacity:0}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -98,31 +114,52 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
     <div class="app-sub">Portal Orang Tua</div>
   </div>
   <div class="header-badge">👨‍👩‍👧 Parents</div>
+  <button class="logout-btn" id="logoutBtn" style="display:none" onclick="logout()">Keluar</button>
 </header>
 
 <div class="hero">
   <div class="cloud c1"></div>
   <span class="spark" style="top:22px;left:30%">✦</span>
   <span class="spark s2" style="top:60px;right:26%">✦</span>
-  <h1>Halo, Parents of <span class="hl" id="heroNama">—</span> 👋</h1>
-  <p>Pantau perkembangan belajar, sesi, dan pembayaran di sini</p>
+  <h1 id="heroTitle">Selamat Datang, <span class="hl">Parents</span> 👋</h1>
+  <p id="heroSub">Login dengan nomor HP dan PIN dari admin Level Up</p>
 </div>
 
+<!-- LOGIN -->
+<main id="loginView">
+  <div class="card" style="max-width:420px;margin:0 auto">
+    <div class="card-title">🔐 Masuk Portal</div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="form-field" style="margin-bottom:12px">
+      <label>Nomor HP (yang terdaftar di admin)</label>
+      <input type="tel" id="loginPhone" placeholder="08..." inputmode="numeric">
+    </div>
+    <div class="form-field" style="margin-bottom:16px">
+      <label>PIN (6 digit dari admin)</label>
+      <input type="password" id="loginPin" placeholder="••••••" inputmode="numeric" maxlength="6" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">✨ Masuk</button>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-top:12px">Lupa PIN? Hubungi admin Level Up ya 🙏</div>
+  </div>
+  <div class="tagline">☆ Little steps today, big <span class="pk">LEVEL UP</span> tomorrow ☆</div>
+</main>
+
+<!-- KONTEN -->
 <main id="mainContent" style="display:none">
 
-  <!-- PROGRES SESI -->
+  <div class="anak-chips" id="anakChips"></div>
+
   <div class="card">
     <div class="card-title">📊 Progres Sesi</div>
     <div id="kelasList"><div class="empty-state">Memuat...</div></div>
   </div>
 
-  <!-- LAPORAN BELAJAR -->
   <div class="card">
     <div class="card-title">📝 Laporan Belajar Terbaru</div>
+    <div class="prog-chips" id="progChips" style="display:none"></div>
     <div id="laporanList"><div class="empty-state">Memuat...</div></div>
   </div>
 
-  <!-- INVOICE -->
   <div class="card">
     <div class="card-title">🧾 Tagihan &amp; Pembayaran</div>
     <div id="invoiceList"><div class="empty-state">Memuat...</div></div>
@@ -132,44 +169,80 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
   <div class="tagline">☆ Little steps today, big <span class="pk">LEVEL UP</span> tomorrow ☆</div>
 </main>
 
-<div id="errBox" class="err-box" style="display:none">
-  Link tidak valid 😢<br>Mohon hubungi admin Level Up untuk mendapatkan link portal yang benar.
-</div>
-
 <div id="toast">—</div>
 
 <script src="api.js"></script>
 <script>
-let murid = null, uploadInvoiceId = null;
+let anakList = [], anak = null, uploadInvoiceId = null, progFilter = '', laporanCache = [];
 
 window.addEventListener('DOMContentLoaded', async () => {
-  const params = new URLSearchParams(location.search);
-  const link = params.get('link');
-  if (!link) { showErr(); return; }
-  try {
-    murid = await API.getMuridByLink(link);
-    document.getElementById('heroNama').textContent = murid.nama;
-    document.getElementById('mainContent').style.display = 'block';
-    renderKelas();
-    loadLaporan();
-    loadInvoice();
-  } catch (e) {
-    showErr();
-  } finally {
-    document.getElementById('loadingOverlay').style.display = 'none';
+  const saved = sessionStorage.getItem('lu_ortu');
+  if (saved) {
+    try {
+      const { phone, pin } = JSON.parse(saved);
+      document.getElementById('loginPhone').value = phone;
+      document.getElementById('loginPin').value = pin;
+      await doLogin(true);
+    } catch (e) { sessionStorage.removeItem('lu_ortu'); }
   }
 });
 
-function showErr() {
-  document.getElementById('loadingOverlay').style.display = 'none';
-  document.getElementById('errBox').style.display = 'block';
+async function doLogin(silent) {
+  const phone = document.getElementById('loginPhone').value.trim();
+  const pin = document.getElementById('loginPin').value.trim();
+  const err = document.getElementById('loginErr');
+  err.style.display = 'none';
+  if (!phone || !pin) { err.textContent = 'Isi nomor HP dan PIN dulu ya 😊'; err.style.display = 'block'; return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = '⏳ Memeriksa...';
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  try {
+    anakList = await API.loginOrtu(phone, pin);
+    sessionStorage.setItem('lu_ortu', JSON.stringify({ phone, pin }));
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    document.getElementById('logoutBtn').style.display = 'inline-block';
+    document.getElementById('heroSub').textContent = 'Pantau perkembangan belajar, sesi, dan pembayaran di sini';
+    renderAnakChips();
+    pilihAnak(anakList[0].id);
+  } catch (e) {
+    sessionStorage.removeItem('lu_ortu');
+    if (!silent) { err.textContent = e.message; err.style.display = 'block'; }
+  } finally {
+    btn.disabled = false; btn.textContent = '✨ Masuk';
+    document.getElementById('loadingOverlay').style.display = 'none';
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('lu_ortu');
+  location.reload();
+}
+
+function renderAnakChips() {
+  const box = document.getElementById('anakChips');
+  box.innerHTML = anakList.length > 1
+    ? anakList.map(a => `<button class="anak-chip" id="chip-${a.id}" onclick="pilihAnak('${a.id}')">👧 ${a.nama}</button>`).join('')
+    : '';
+}
+
+function pilihAnak(id) {
+  anak = anakList.find(a => a.id === id);
+  if (!anak) return;
+  document.querySelectorAll('.anak-chip').forEach(c => c.classList.toggle('active', c.id === 'chip-' + id));
+  document.getElementById('heroTitle').innerHTML = `Halo, Parents of <span class="hl">${anak.nama}</span> 👋`;
+  progFilter = '';
+  renderKelas();
+  loadLaporan();
+  loadInvoice();
 }
 
 async function renderKelas() {
   const box = document.getElementById('kelasList');
+  box.innerHTML = '<div class="empty-state">Memuat...</div>';
   try {
     const sesiAll = await API.getSesiAllKelas();
-    const kelas = (murid.kelas || []);
+    const kelas = anak.kelas || [];
     if (!kelas.length) { box.innerHTML = '<div class="empty-state">Belum ada kelas terdaftar</div>'; return; }
     box.innerHTML = kelas.map(k => {
       const s = sesiAll.find(x => x.kelas_id === k.id);
@@ -191,33 +264,51 @@ async function renderKelas() {
 
 async function loadLaporan() {
   const box = document.getElementById('laporanList');
+  box.innerHTML = '<div class="empty-state">Memuat...</div>';
   try {
-    const rows = await API.getLaporan({ murid_id: murid.id });
-    if (!rows.length) { box.innerHTML = '<div class="empty-state">Belum ada laporan ✦</div>'; return; }
-    box.innerHTML = rows.slice(0, 10).map(r => {
-      const materi = LU.parseMateri(r.materi_json);
-      const first = materi[0] ? materi[0].m : '—';
-      return `<div class="history-item">
-        <div class="hi-head" onclick="this.nextElementSibling.classList.toggle('open')">
-          <div style="flex:1">
-            <div style="font-weight:800;font-size:13px">${LU.fmtDate(r.tanggal)} · ${r.program || ''} <span style="font-size:11px;color:var(--muted)">(${r.nama_guru || '—'})</span></div>
-            <div style="font-size:12px;color:var(--muted)">${first.slice(0, 60)}${first.length > 60 ? '...' : ''}</div>
-          </div>
-          <span style="color:var(--muted)">▼</span>
-        </div>
-        <div class="hi-body">
-          ${materi.map(x => `<div>• ${x.m} <span class="stars">${LU.stars(x.s)}</span></div>`).join('') || '—'}
-          ${r.catatan ? `<div style="margin-top:8px"><strong>Teacher's Note:</strong> ${r.catatan}</div>` : ''}
-        </div>
-      </div>`;
-    }).join('');
+    const rows = await API.getLaporan({ murid_id: anak.id });
+    laporanCache = rows.filter(r => r.status !== 'pending'); // hanya yang sudah dicek admin
+    const progs = [...new Set(laporanCache.map(r => r.program).filter(Boolean))];
+    const chips = document.getElementById('progChips');
+    if (progs.length > 1) {
+      chips.style.display = 'flex';
+      chips.innerHTML = `<button class="prog-chip ${!progFilter ? 'active' : ''}" onclick="setProgFilter('')">Semua</button>` +
+        progs.map(p => `<button class="prog-chip ${progFilter === p ? 'active' : ''}" onclick="setProgFilter('${p}')">${p}</button>`).join('');
+    } else chips.style.display = 'none';
+    renderLaporan();
   } catch (e) { box.innerHTML = '<div class="empty-state">Gagal memuat laporan</div>'; }
+}
+
+function setProgFilter(p) { progFilter = p; loadLaporan(); }
+
+function renderLaporan() {
+  const box = document.getElementById('laporanList');
+  const rows = progFilter ? laporanCache.filter(r => r.program === progFilter) : laporanCache;
+  if (!rows.length) { box.innerHTML = '<div class="empty-state">Belum ada laporan ✦</div>'; return; }
+  box.innerHTML = rows.slice(0, 10).map(r => {
+    const materi = LU.parseMateri(r.materi_json);
+    const first = materi[0] ? materi[0].m : '—';
+    return `<div class="history-item">
+      <div class="hi-head" onclick="this.nextElementSibling.classList.toggle('open')">
+        <div style="flex:1">
+          <div style="font-weight:800;font-size:13px">${LU.fmtDate(r.tanggal)} · ${r.program || ''} <span style="font-size:11px;color:var(--muted)">(${r.nama_guru || '—'})</span></div>
+          <div style="font-size:12px;color:var(--muted)">${first.slice(0, 60)}${first.length > 60 ? '...' : ''}</div>
+        </div>
+        <span style="color:var(--muted)">▼</span>
+      </div>
+      <div class="hi-body">
+        ${materi.map(x => `<div>• ${x.m} <span class="stars">${LU.stars(x.s)}</span></div>`).join('') || '—'}
+        ${r.catatan ? `<div style="margin-top:8px"><strong>Teacher's Note:</strong> ${r.catatan}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
 async function loadInvoice() {
   const box = document.getElementById('invoiceList');
+  box.innerHTML = '<div class="empty-state">Memuat...</div>';
   try {
-    const rows = await API.getInvoice({ murid_id: murid.id });
+    const rows = await API.getInvoice({ murid_id: anak.id });
     if (!rows.length) { box.innerHTML = '<div class="empty-state">Belum ada tagihan ✦</div>'; return; }
     box.innerHTML = rows.map(r => `
       <div class="inv-item">
@@ -242,9 +333,10 @@ function pilihBukti(invoiceId) {
 async function uploadBuktiFile() {
   const file = document.getElementById('buktiFile').files[0];
   if (!file || !uploadInvoiceId) return;
+  if (file.size > 4 * 1024 * 1024) { showToast('File terlalu besar (maks 4MB) — coba foto ulang/kompres ya', 'error'); return; }
   showToast('Mengupload bukti... ⏳');
   try {
-    await API.uploadBukti(uploadInvoiceId, murid.id, '', file);
+    await API.uploadBukti(uploadInvoiceId, anak.id, '', file);
     showToast('Bukti terkirim! Terima kasih 🙏', 'success');
     loadInvoice();
   } catch (e) { showToast('Gagal upload: ' + e.message, 'error'); }

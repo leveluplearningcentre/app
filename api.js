@@ -41,10 +41,15 @@ const API = {
   deleteGuru: (id)     => API.post({ action: 'deleteGuru', id }),
   getFeeGuru: (bulan)  => API.post({ action: 'getFeeGuru', bulan }),
 
-  // LAPORAN  (materi = [{m:'...', s:1-4}, ...])
+  // LAPORAN  (materi = [{m:'...', s:1-4}, ...] · status: pending → approved)
   getLaporan:    (opts = {}) => API.post({ action: 'getLaporan', ...opts }),
   addLaporan:    (d)         => API.post({ action: 'addLaporan', ...d }),
+  updateLaporan: (d)         => API.post({ action: 'updateLaporan', ...d }),
   deleteLaporan: (id)        => API.post({ action: 'deleteLaporan', id }),
+
+  // ORTU LOGIN
+  loginOrtu:   (phone, pin) => API.post({ action: 'loginOrtu', phone, pin }),
+  generatePin: (murid_id)   => API.post({ action: 'generatePin', murid_id }),
 
   // ABSENSI
   getAbsensi:    (opts = {})      => API.post({ action: 'getAbsensi', ...opts }),
@@ -72,6 +77,8 @@ const API = {
   // SETUP
   setup: () => API.post({ action: 'setup' }),
   seed:  () => API.post({ action: 'seed' }),
+  addColumn: (sheet, kolom, default_val) => API.post({ action: 'addColumn', sheet, kolom, default_val }),
+  migrate: () => API.post({ action: 'migrate' }),
 };
 
 // ── Util bersama ────────────────────────────────────────────
@@ -115,4 +122,27 @@ ${LU.BANK}
 
 Mohon konfirmasi setelah melakukan pembayaran ya 🙏
 Terima kasih banyak atas kepercayaannya 😊`),
+  // Template WA laporan harian (dipakai guru utk preview & admin utk kirim setelah approve)
+  waLaporan: ({ tanggal, nama, program, tipe, materi, catatan }) => {
+    const tglFmt = tanggal
+      ? new Date(tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
+    const materiTxt = (materi && materi.length)
+      ? materi.map(x => `• ${x.m} ${LU.stars(x.s)}`).join('\n')
+      : '—';
+    return `Hello mum / dads 👋✦
+
+📋 Daily Report — Level Up Learning Center
+${tglFmt}
+Nama: ${nama || '—'}
+Program: ${program || '—'}${tipe ? ' (' + tipe + ')' : ''}
+
+Materi hari ini:
+${materiTxt}
+
+📝 Teacher's Note:
+${catatan || '—'}
+
+☆ Little steps today, big LEVEL UP tomorrow ☆`;
+  },
 };

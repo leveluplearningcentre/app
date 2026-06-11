@@ -197,7 +197,8 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
 
   <!-- WA PREVIEW -->
   <div class="card">
-    <div class="card-title">📱 Preview Pesan WhatsApp <span style="font-size:14px">✦</span></div>
+    <div class="card-title">📱 Preview Pesan (dikirim admin setelah dicek) <span style="font-size:14px">✦</span></div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:10px">Laporan kamu masuk dulu ke admin untuk dicek typo &amp; bahasa. Setelah di-approve, admin yang kirim ke ortu ya 😊</div>
     <div class="wa-preview">
       <div class="traffic">
         <div class="dot" style="background:#FF5F57"></div>
@@ -214,18 +215,14 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
 
   <div class="saved-banner" id="savedBanner">
     <span style="font-size:22px">✅</span>
-    <span>Laporan tersimpan &amp; absensi otomatis tercatat hadir! Kirim pesan ke orang tua:</span>
+    <span>Laporan tersimpan &amp; absensi otomatis tercatat hadir! Laporan menunggu pengecekan admin sebelum dikirim ke ortu ⏳</span>
   </div>
 
   <div id="step1Btns">
     <button class="btn btn-primary btn-full" onclick="saveReport()">💾 Simpan Laporan</button>
   </div>
   <div id="step2Btns" style="display:none">
-    <div class="btn-row">
-      <button class="btn btn-blue" onclick="copyWA()">📋 Salin Pesan</button>
-      <button class="btn btn-primary" onclick="kirimWA()">📱 Kirim ke Ortu</button>
-    </div>
-    <button class="btn btn-dark" style="margin-top:10px;width:100%;justify-content:center" onclick="resetForm()">✏️ Isi Laporan Baru</button>
+    <button class="btn btn-dark" style="width:100%;justify-content:center" onclick="resetForm()">✏️ Isi Laporan Baru</button>
   </div>
 </main>
 
@@ -428,29 +425,13 @@ async function saveReport() {
     document.querySelectorAll('.form-field input,.form-field select,.form-field textarea,.materi-row input')
       .forEach(el => el.disabled = true);
 
-    showToast('Laporan disimpan! ⭐', 'success');
+    showToast('Laporan disimpan — menunggu approval admin ⏳⭐', 'success');
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   } catch (e) {
     showToast('Gagal: ' + e.message, 'error');
     btn.textContent = '💾 Simpan Laporan';
     btn.disabled = false;
   }
-}
-
-function copyWA() {
-  navigator.clipboard.writeText(document.getElementById('waText').textContent);
-  showToast('Pesan disalin! 📋', 'success');
-}
-
-function kirimWA() {
-  const k = currentKelas();
-  const murid = muridData.find(m => m.id === (k && k.murid_id));
-  const waRaw = murid ? (murid.wa_laporan || murid.wa_ortu || '') : '';
-  const wa = String(waRaw).replace(/\D/g, '');
-  if (!wa) { showToast('No. WA ortu belum diisi di data murid!', 'error'); return; }
-  const num = wa.startsWith('62') ? wa : (wa.startsWith('0') ? '62' + wa.slice(1) : '62' + wa);
-  const msg = encodeURIComponent(document.getElementById('waText').textContent);
-  window.open('https://wa.me/' + num + '?text=' + msg, '_blank');
 }
 
 function resetForm() {

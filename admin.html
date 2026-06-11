@@ -183,6 +183,10 @@ tr:hover td{background:#FFFAF8}
       <div id="dashKuotaList"><div class="empty"><span class="spinner"></span></div></div>
     </div>
     <div class="card">
+      <div class="card-title">⏰ Term Hampir Berakhir (≤ 7 hari)</div>
+      <div id="dashTermList"><div class="empty"><span class="spinner"></span></div></div>
+    </div>
+    <div class="card">
       <div class="card-title">📊 Sesi Berjalan per Kelas</div>
       <div class="table-wrap">
         <table><thead><tr><th>Murid</th><th>Program</th><th>Guru</th><th>Jadwal</th><th>Sesi / Kuota</th></tr></thead>
@@ -214,8 +218,8 @@ tr:hover td{background:#FFFAF8}
         <input id="muridSearch" placeholder="🔍 cari nama..." oninput="renderMurid()" style="margin-left:auto;padding:7px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;outline:none;max-width:200px">
       </div>
       <div class="table-wrap">
-        <table><thead><tr><th>Nama</th><th>Program</th><th>Rate/Sesi</th><th>WA Ortu</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody id="muridTbody"><tr><td colspan="6" class="empty"><span class="spinner"></span></td></tr></tbody></table>
+        <table><thead><tr><th>Nama</th><th>Program</th><th>Rate/Sesi</th><th>WA Ortu</th><th>PIN Portal</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="muridTbody"><tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr></tbody></table>
       </div>
     </div>
   </div>
@@ -255,18 +259,21 @@ tr:hover td{background:#FFFAF8}
   <!-- ═══ LAPORAN ═══ -->
   <div class="tab-page" id="tab-laporan">
     <div class="card">
-      <div class="card-title">📝 Laporan Harian Guru</div>
-      <div class="form-grid" style="grid-template-columns:170px 200px 200px auto">
+      <div class="card-title">📝 Laporan Harian Guru <span class="badge bg-yellow" id="pendingBadge" style="display:none"></span></div>
+      <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:10px">Laporan dari guru masuk berstatus <strong>⏳ pending</strong> — cek typo &amp; bahasa (✏️), lalu ✅ approve, baru 💬 kirim ke ortu. Laporan pending tidak tampil di portal ortu &amp; report PDF.</div>
+      <div class="form-grid" style="grid-template-columns:160px 170px 170px 150px auto">
         <div class="form-field"><label>Bulan</label><input type="month" id="lapBulan"></div>
         <div class="form-field"><label>Guru</label><select id="lapGuru"><option value="">Semua guru</option></select></div>
         <div class="form-field"><label>Murid</label><select id="lapMurid"><option value="">Semua murid</option></select></div>
+        <div class="form-field"><label>Status</label>
+          <select id="lapStatus"><option value="">Semua</option><option value="pending">⏳ Pending</option><option value="approved">✅ Approved</option></select></div>
         <div class="form-field" style="display:flex;align-items:flex-end">
           <button class="btn btn-blue" onclick="loadLaporan()">🔍 Filter</button>
         </div>
       </div>
       <div class="table-wrap">
-        <table><thead><tr><th>Tanggal</th><th>Murid</th><th>Guru</th><th>Program</th><th>Materi</th><th>Aksi</th></tr></thead>
-        <tbody id="laporanTbody"><tr><td colspan="6" class="empty"><span class="spinner"></span></td></tr></tbody></table>
+        <table><thead><tr><th>Tanggal</th><th>Murid</th><th>Guru</th><th>Program</th><th>Materi</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="laporanTbody"><tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr></tbody></table>
       </div>
     </div>
   </div>
@@ -283,7 +290,7 @@ tr:hover td{background:#FFFAF8}
         <div class="form-field"><label>Label Program</label><input id="invProgram" placeholder="cth: Mandarin & Tutor" oninput="updateInvWA()"></div>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-        <button class="btn btn-primary" onclick="buatInvoice()">✨ Generate Invoice</button>
+        <button class="btn btn-primary" onclick="buatInvoice(this)">✨ Generate Invoice</button>
         <button class="btn btn-blue" onclick="copyInvWA()">📋 Salin Pesan WA</button>
       </div>
       <div class="wa-preview"><div class="wa-bubble" id="invWaText">— pilih murid dulu —</div></div>
@@ -291,6 +298,7 @@ tr:hover td{background:#FFFAF8}
     <div class="card">
       <div class="card-title">📜 Daftar Invoice
         <input type="month" id="invFilterBulan" onchange="loadInvoice()" style="margin-left:auto;padding:7px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;outline:none">
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('invFilterBulan').value='';loadInvoice()">Semua bulan</button>
       </div>
       <div class="table-wrap">
         <table><thead><tr><th>Murid</th><th>Bulan</th><th>Program</th><th>Sesi</th><th>Rate</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
@@ -314,7 +322,7 @@ tr:hover td{background:#FFFAF8}
         <textarea id="repNote" placeholder="Catatan guru untuk report..."></textarea></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn btn-primary" onclick="buatReport()">✨ Buat Report</button>
-        <button class="btn btn-blue" id="repPrintBtn" style="display:none" onclick="window.print()">🖨️ Print / Save PDF</button>
+        <button class="btn btn-blue" id="repPrintBtn" style="display:none" onclick="printReport()">🖨️ Print / Save PDF</button>
       </div>
     </div>
     <div id="reportSheetWrap" style="display:none">
@@ -368,7 +376,7 @@ tr:hover td{background:#FFFAF8}
     <button class="modal-close" onclick="closeKelasModal()">✕</button>
     <div class="card-title" id="kelasModalTitle">📚 Kelas Murid</div>
     <div class="table-wrap" style="margin-bottom:16px">
-      <table style="min-width:0"><thead><tr><th>Program</th><th>Guru</th><th>Jadwal</th><th>Kuota</th><th>Fee Guru</th><th></th></tr></thead>
+      <table style="min-width:0"><thead><tr><th>Program</th><th>Guru</th><th>Jadwal</th><th>Kuota</th><th>Fee Guru</th><th>Term</th><th></th></tr></thead>
       <tbody id="kelasModalTbody"></tbody></table>
     </div>
     <div style="font-weight:800;font-size:13px;margin-bottom:8px;color:var(--pink-ink)" id="kelasFormMode">➕ Tambah Kelas</div>
@@ -380,7 +388,9 @@ tr:hover td{background:#FFFAF8}
       <div class="form-field"><label>Guru</label><select id="kGuru"></select></div>
       <div class="form-field"><label>Jadwal</label><input id="kJadwal" placeholder="cth: Mon/Thu 15.30"></div>
       <div class="form-field"><label>Kuota Sesi</label><input id="kKuota" type="number" value="8"></div>
-      <div class="form-field"><label>Fee Guru /sesi (Rp)</label><input id="kFee" type="number" placeholder="cth: 75000"></div>
+      <div class="form-field"><label>Fee Guru /sesi (Rp)</label><input id="kFee" type="number" placeholder="beda per murid, cth: 100000"></div>
+      <div class="form-field"><label>Term Mulai</label><input type="date" id="kTermMulai"></div>
+      <div class="form-field"><label>Term Berakhir</label><input type="date" id="kTermAkhir"></div>
     </div>
     <button class="btn btn-primary" id="kSaveBtn" onclick="saveKelas()">💾 Simpan Kelas</button>
     <button class="btn btn-ghost" id="kCancelBtn" style="display:none" onclick="resetKelasForm()">Batal</button>
@@ -392,6 +402,38 @@ tr:hover td{background:#FFFAF8}
   <div class="modal">
     <button class="modal-close" onclick="document.getElementById('lapModalBg').classList.remove('open')">✕</button>
     <div id="lapModalBody"></div>
+  </div>
+</div>
+
+<!-- MODAL EDIT LAPORAN (koreksi typo sebelum approve) -->
+<div class="modal-bg" id="lapEditModalBg" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('lapEditModalBg').classList.remove('open')">✕</button>
+    <div class="card-title" id="lapEditTitle">✏️ Edit Laporan</div>
+    <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Materi &amp; Bintang</div>
+    <div id="lapEditMateri"></div>
+    <button class="btn btn-ghost btn-sm" onclick="addLapEditRow()" style="margin-bottom:14px">＋ Tambah materi</button>
+    <div class="form-field" style="margin-bottom:12px"><label>Teacher's Note</label>
+      <textarea id="lapEditCatatan"></textarea></div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;margin-bottom:14px;cursor:pointer">
+      <input type="checkbox" id="lapEditApprove" style="width:17px;height:17px;accent-color:var(--green)"> ✅ Approve (siap dikirim ke ortu)
+    </label>
+    <button class="btn btn-primary" onclick="saveLaporanEdit()">💾 Simpan</button>
+  </div>
+</div>
+
+<!-- MODAL EDIT INVOICE -->
+<div class="modal-bg" id="invEditModalBg" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:440px">
+    <button class="modal-close" onclick="document.getElementById('invEditModalBg').classList.remove('open')">✕</button>
+    <div class="card-title" id="invEditTitle">✏️ Edit Invoice</div>
+    <div class="form-grid" style="grid-template-columns:1fr 1fr">
+      <div class="form-field"><label>Jumlah Sesi</label><input type="number" id="invEditSesi" oninput="invEditHitung()"></div>
+      <div class="form-field"><label>Rate /sesi (Rp)</label><input type="number" id="invEditRate" oninput="invEditHitung()"></div>
+    </div>
+    <div class="form-field" style="margin-bottom:14px"><label>Total (Rp) — otomatis, boleh diubah manual</label>
+      <input type="number" id="invEditNominal"></div>
+    <button class="btn btn-primary" onclick="saveInvoiceEdit()">💾 Simpan</button>
   </div>
 </div>
 
@@ -469,6 +511,23 @@ async function loadDashboard(){
   document.getElementById('dashKuotaList').innerHTML = full.length
     ? full.map(s=>`<div class="alert-banner" onclick="showTab('invoice',document.querySelectorAll('.tab-btn')[4])">🔔 <strong>${s.nama}</strong> · ${s.program} (${s.tipe}) — ${s.sesi}/${s.kuota} sesi terpenuhi → buat invoice</div>`).join('')
     : '<div class="empty">Belum ada kelas yang kuotanya terpenuhi ✦</div>';
+  // Term hampir berakhir: pakai tgl_akhir_term, fallback tgl_mulai_term + 1 bulan
+  const now = new Date(); now.setHours(0,0,0,0);
+  const terms = sesiData.map(s=>{
+    let akhir = s.tgl_akhir_term;
+    if(!akhir && s.tgl_mulai_term){
+      const d = new Date(s.tgl_mulai_term); d.setMonth(d.getMonth()+1);
+      akhir = d.toISOString().slice(0,10);
+    }
+    if(!akhir) return null;
+    const sisaHari = Math.round((new Date(akhir) - now)/86400000);
+    return { ...s, akhir, sisaHari, sisaKuota: Math.max(0, s.kuota - s.sesi) };
+  }).filter(t=>t && t.sisaHari<=7);
+  document.getElementById('dashTermList').innerHTML = terms.length
+    ? terms.sort((a,b)=>a.sisaHari-b.sisaHari).map(t=>`
+      <div class="alert-banner" style="${t.sisaHari<0?'':'background:var(--yellow-soft);border-color:var(--yellow);color:var(--yellow-ink)'}">
+      ⏰ <strong>${t.nama}</strong> · ${t.program} (${t.tipe}) — term ${t.sisaHari<0?`sudah lewat ${-t.sisaHari} hari`:t.sisaHari===0?'berakhir HARI INI':`berakhir ${t.sisaHari} hari lagi`} (${LU.fmtDateDDMM(t.akhir)}) · sisa kuota <strong>${t.sisaKuota} sesi</strong></div>`).join('')
+    : '<div class="empty">Tidak ada term yang hampir berakhir ✦ (isi tanggal term di tab Murid → 📚 Kelas)</div>';
   document.getElementById('dashSesiTbody').innerHTML = sesiData.length
     ? [...sesiData].sort((a,b)=> (b.sesi/(b.kuota||1)) - (a.sesi/(a.kuota||1))).map(s=>`
       <tr><td><strong>${s.nama}</strong></td><td>${progBadge(s.program)} <span class="badge bg-pink">${s.tipe}</span></td>
@@ -489,14 +548,16 @@ function renderMurid(){
       <td>${progs.length?progs.map(progBadge).join(' '):'<span class="badge bg-red">belum ada kelas</span>'}</td>
       <td>${Number(m.rate_invoice)?LU.rp(m.rate_invoice):'<span style="color:var(--red)">belum diisi</span>'}</td>
       <td style="font-size:12px">${m.wa_ortu||'—'}</td>
+      <td style="white-space:nowrap"><strong style="letter-spacing:1px">${m.pin||'—'}</strong>
+        <button class="btn btn-ghost btn-sm" title="Generate PIN baru" onclick="generatePinMurid('${m.id}')">🔑</button></td>
       <td><span class="badge ${m.aktif==='aktif'?'bg-mint':'bg-red'}">${m.aktif}</span></td>
       <td style="white-space:nowrap">
         <button class="btn btn-blue btn-sm" onclick="openKelasModal('${m.id}')">📚 Kelas (${kls.length})</button>
         <button class="btn btn-ghost btn-sm" onclick="editMurid('${m.id}')">✏️</button>
-        <button class="btn btn-ghost btn-sm" onclick="copyOrtuLink('${m.link_id}')">🔗</button>
+        <button class="btn btn-ghost btn-sm" title="Salin info login ortu" onclick="copyOrtuLogin('${m.id}')">🔗</button>
         <button class="btn btn-ghost btn-sm" onclick="hapusMurid('${m.id}','${(m.nama||'').replace(/'/g,"\\'")}')">🗑️</button>
       </td></tr>`;
-  }).join('') : '<tr><td colspan="6" class="empty">Tidak ada murid</td></tr>';
+  }).join('') : '<tr><td colspan="7" class="empty">Tidak ada murid</td></tr>';
 }
 
 function editMurid(id){
@@ -547,10 +608,21 @@ async function hapusMurid(id,nama){
   try{ await API.deleteMurid(id); showToast('Terhapus','success'); await refreshBaseData(); renderMurid(); }
   catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
-function copyOrtuLink(linkId){
-  const url = location.href.replace(/admin\.html.*$/,'') + 'ortu.html?link=' + linkId;
-  navigator.clipboard.writeText(url);
-  showToast('Link portal ortu disalin! 🔗','success');
+async function generatePinMurid(id){
+  if(!confirm('Generate PIN baru? PIN lama tidak berlaku lagi.')) return;
+  try{
+    const r = await API.generatePin(id);
+    const m = muridData.find(x=>x.id===id); if(m) m.pin = r.pin;
+    renderMurid();
+    showToast('PIN baru: '+r.pin+' 🔑','success');
+  }catch(e){ showToast('Gagal: '+e.message,'error'); }
+}
+function copyOrtuLogin(id){
+  const m = muridData.find(x=>x.id===id); if(!m) return;
+  const url = location.href.replace(/admin\.html.*$/,'') + 'ortu.html';
+  const txt = `Halo Parents of ${m.nama} 👋✦\n\nPortal Orang Tua Level Up Learning Center:\n${url}\n\nLogin pakai:\n📱 No. HP: ${m.wa_ortu||'(nomor WA yang terdaftar)'}\n🔑 PIN: ${m.pin||'(hubungi admin)'}\n\nDi portal bisa lihat laporan belajar, progres sesi, dan tagihan ya 😊`;
+  navigator.clipboard.writeText(txt);
+  showToast('Info login ortu disalin — tinggal paste di WA! 🔗','success');
 }
 
 // ── KELAS MODAL ─────────────────────────────────────────────
@@ -572,10 +644,11 @@ function renderKelasModal(){
       <td style="font-size:12px">${k.jadwal||'—'}</td>
       <td><strong>${k.sesi_kuota}</strong></td>
       <td>${Number(k.fee_guru)?LU.rp(k.fee_guru):'<span style="color:var(--red);font-size:12px">belum diisi</span>'}</td>
+      <td style="font-size:11px">${k.tgl_mulai_term?LU.fmtDateDDMM(k.tgl_mulai_term):'—'}${k.tgl_akhir_term?' →<br>'+LU.fmtDateDDMM(k.tgl_akhir_term):''}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="editKelas('${k.id}')">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="hapusKelas('${k.id}')">🗑️</button>
-      </td></tr>`).join('') : '<tr><td colspan="6" class="empty">Belum ada kelas</td></tr>';
+      </td></tr>`).join('') : '<tr><td colspan="7" class="empty">Belum ada kelas</td></tr>';
 }
 function editKelas(id){
   const k = kelasData.find(x=>x.id===id); if(!k) return;
@@ -587,6 +660,8 @@ function editKelas(id){
   document.getElementById('kJadwal').value=k.jadwal||'';
   document.getElementById('kKuota').value=k.sesi_kuota;
   document.getElementById('kFee').value=k.fee_guru||'';
+  document.getElementById('kTermMulai').value=k.tgl_mulai_term||'';
+  document.getElementById('kTermAkhir').value=k.tgl_akhir_term||'';
   document.getElementById('kCancelBtn').style.display='inline-flex';
 }
 function resetKelasForm(){
@@ -595,6 +670,8 @@ function resetKelasForm(){
   document.getElementById('kJadwal').value='';
   document.getElementById('kKuota').value='8';
   document.getElementById('kFee').value='';
+  document.getElementById('kTermMulai').value='';
+  document.getElementById('kTermAkhir').value='';
   document.getElementById('kCancelBtn').style.display='none';
 }
 async function saveKelas(){
@@ -607,6 +684,8 @@ async function saveKelas(){
     jadwal: document.getElementById('kJadwal').value.trim(),
     sesi_kuota: document.getElementById('kKuota').value,
     fee_guru: document.getElementById('kFee').value,
+    tgl_mulai_term: document.getElementById('kTermMulai').value,
+    tgl_akhir_term: document.getElementById('kTermAkhir').value,
   };
   if(!d.guru_id){ showToast('Pilih guru!','error'); return; }
   const btn=document.getElementById('kSaveBtn'); btn.disabled=true; btn.textContent='⏳...';
@@ -704,26 +783,110 @@ async function loadAbsensiRekap(){
 // ── LAPORAN ─────────────────────────────────────────────────
 async function loadLaporan(){
   const tbody=document.getElementById('laporanTbody');
-  tbody.innerHTML='<tr><td colspan="6" class="empty"><span class="spinner"></span></td></tr>';
+  tbody.innerHTML='<tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr>';
   const opts={};
   const bln=document.getElementById('lapBulan').value; if(bln) opts.bulan=bln;
   const g=document.getElementById('lapGuru').value; if(g) opts.guru_id=g;
   const m=document.getElementById('lapMurid').value; if(m) opts.murid_id=m;
+  const st=document.getElementById('lapStatus').value; if(st) opts.status=st;
   try{
     const rows = await API.getLaporan(opts);
     window._lapRows = rows;
+    const nPending = rows.filter(r=>r.status==='pending').length;
+    const pb = document.getElementById('pendingBadge');
+    pb.style.display = nPending ? 'inline-block' : 'none';
+    pb.textContent = nPending + ' menunggu approval';
     tbody.innerHTML = rows.length ? rows.map((r,i)=>{
       const materi = LU.parseMateri(r.materi_json);
       const avg = materi.length ? Math.round(materi.reduce((a,x)=>a+(x.s||0),0)/materi.length) : 0;
-      return `<tr><td>${LU.fmtDate(r.tanggal)}</td><td><strong>${r.nama_murid||'—'}</strong></td>
+      const pending = r.status==='pending';
+      return `<tr style="${pending?'background:var(--yellow-soft)':''}"><td>${LU.fmtDate(r.tanggal)}</td><td><strong>${r.nama_murid||'—'}</strong></td>
       <td>${r.nama_guru||'—'}</td><td>${progBadge(r.program||'Tutor')}</td>
       <td>${materi.length} materi <span class="stars">${LU.stars(avg)}</span></td>
+      <td><span class="badge ${pending?'bg-yellow':'bg-mint'}">${pending?'⏳ pending':'✅ approved'}</span></td>
       <td style="white-space:nowrap">
-        <button class="btn btn-ghost btn-sm" onclick="lihatLaporan(${i})">👁️</button>
+        <button class="btn btn-ghost btn-sm" title="Lihat" onclick="lihatLaporan(${i})">👁️</button>
+        <button class="btn btn-ghost btn-sm" title="Edit (koreksi typo)" onclick="editLaporanModal(${i})">✏️</button>
+        ${pending?`<button class="btn btn-mint btn-sm" title="Approve" onclick="approveLaporan('${r.id}')">✅</button>`
+                 :`<button class="btn btn-blue btn-sm" title="Kirim WA ke ortu" onclick="kirimLapWA(${i})">💬</button>`}
         <button class="btn btn-ghost btn-sm" onclick="hapusLaporan('${r.id}')">🗑️</button>
       </td></tr>`;
-    }).join('') : '<tr><td colspan="6" class="empty">Belum ada laporan ✦</td></tr>';
-  }catch(e){ tbody.innerHTML='<tr><td colspan="6" class="empty">Gagal: '+e.message+'</td></tr>'; }
+    }).join('') : '<tr><td colspan="7" class="empty">Belum ada laporan ✦</td></tr>';
+  }catch(e){ tbody.innerHTML='<tr><td colspan="7" class="empty">Gagal: '+e.message+'</td></tr>'; }
+}
+
+async function approveLaporan(id){
+  try{
+    await API.updateLaporan({id, status:'approved'});
+    showToast('Laporan di-approve! Sekarang bisa dikirim ke ortu 💬','success');
+    loadLaporan();
+  }catch(e){ showToast('Gagal: '+e.message,'error'); }
+}
+
+function kirimLapWA(i){
+  const r = (window._lapRows||[])[i]; if(!r) return;
+  const k = kelasData.find(x=>x.id===r.kelas_id);
+  const txt = LU.waLaporan({ tanggal:r.tanggal, nama:r.nama_murid, program:r.program, tipe:k?k.tipe:'', materi:LU.parseMateri(r.materi_json), catatan:r.catatan });
+  const m = muridData.find(x=>x.id===r.murid_id);
+  const waRaw = m ? (m.wa_laporan||m.wa_ortu||'') : '';
+  const wa = String(waRaw).replace(/\D/g,'');
+  if(wa){
+    const num = wa.startsWith('62') ? wa : (wa.startsWith('0') ? '62'+wa.slice(1) : '62'+wa);
+    window.open('https://wa.me/'+num+'?text='+encodeURIComponent(txt),'_blank');
+  } else {
+    navigator.clipboard.writeText(txt);
+    showToast('WA ortu kosong — pesan disalin ke clipboard 📋','success');
+  }
+}
+
+// ── EDIT LAPORAN MODAL (admin koreksi typo/bahasa) ──────────
+let editLapId = null;
+function editLaporanModal(i){
+  const r = (window._lapRows||[])[i]; if(!r) return;
+  editLapId = r.id;
+  const materi = LU.parseMateri(r.materi_json);
+  document.getElementById('lapEditTitle').textContent = '✏️ Edit Laporan — '+(r.nama_murid||'')+' · '+LU.fmtDate(r.tanggal);
+  const list = document.getElementById('lapEditMateri');
+  list.innerHTML = '';
+  (materi.length?materi:[{m:'',s:3}]).forEach(x=>addLapEditRow(x.m,x.s));
+  document.getElementById('lapEditCatatan').value = r.catatan||'';
+  document.getElementById('lapEditApprove').checked = r.status!=='pending';
+  document.getElementById('lapEditModalBg').classList.add('open');
+}
+function addLapEditRow(val='', star=3){
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:8px';
+  div.className = 'lap-edit-row';
+  div.innerHTML = `
+    <input type="text" value="${String(val).replace(/"/g,'&quot;')}" style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;outline:none">
+    <div class="lap-stars" data-val="${star}" style="display:flex;gap:1px">${[1,2,3,4].map(n=>`<button type="button" data-n="${n}" onclick="setLapStar(this)" style="background:none;border:none;font-size:19px;cursor:pointer;color:${n<=star?'#FFB95E':'#D8D2E0'};padding:0 1px">★</button>`).join('')}</div>
+    <button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">✕</button>`;
+  document.getElementById('lapEditMateri').appendChild(div);
+}
+function setLapStar(btn){
+  const n = Number(btn.dataset.n);
+  btn.parentElement.dataset.val = n;
+  btn.parentElement.querySelectorAll('button').forEach(b=>{
+    b.style.color = Number(b.dataset.n)<=n ? '#FFB95E' : '#D8D2E0';
+  });
+}
+async function saveLaporanEdit(){
+  const materi = [...document.querySelectorAll('.lap-edit-row')].map(row=>({
+    m: row.querySelector('input').value.trim(),
+    s: Number(row.querySelector('.lap-stars').dataset.val)||0,
+  })).filter(x=>x.m);
+  if(!materi.length){ showToast('Minimal 1 materi!','error'); return; }
+  try{
+    await API.updateLaporan({
+      id: editLapId,
+      materi,
+      catatan: document.getElementById('lapEditCatatan').value,
+      status: document.getElementById('lapEditApprove').checked ? 'approved' : 'pending',
+    });
+    document.getElementById('lapEditModalBg').classList.remove('open');
+    showToast('Laporan tersimpan ✦','success');
+    loadLaporan();
+  }catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
 function lihatLaporan(i){
   const r = (window._lapRows||[])[i]; if(!r) return;
@@ -776,17 +939,23 @@ function copyInvWA(){
   navigator.clipboard.writeText(document.getElementById('invWaText').textContent);
   showToast('Pesan WA disalin! 📋','success');
 }
-async function buatInvoice(){
+let invBusy = false;
+async function buatInvoice(btnEl){
+  if(invBusy) return; // cegah double-click
   const f = invForm();
   if(!f.murid_id){ showToast('Pilih murid!','error'); return; }
   if(!f.bulan){ showToast('Pilih bulan!','error'); return; }
   if(f.sesi<=0){ showToast('Jumlah sesi harus > 0','error'); return; }
+  invBusy = true;
+  const btn = btnEl || document.querySelector('#tab-invoice .btn-primary');
+  const oldTxt = btn.textContent; btn.disabled = true; btn.textContent = '⏳ Membuat...';
   try{
     await API.generateInvoice({murid_id:f.murid_id, bulan:f.bulan, sesi:f.sesi, rate:f.rate, program_label:f.program_label});
     showToast('Invoice dibuat! ✦','success');
     document.getElementById('invFilterBulan').value = f.bulan;
     loadInvoice();
   }catch(e){ showToast('Gagal: '+e.message,'error'); }
+  invBusy = false; btn.disabled = false; btn.textContent = oldTxt;
 }
 async function loadInvoice(){
   const tbody=document.getElementById('invoiceTbody');
@@ -833,13 +1002,31 @@ async function tandaiLunas(id){
     loadInvoice();
   }catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
-async function editInvoice(i){
+let editInvId = null;
+function editInvoice(i){
   const r = (window._invRows||[])[i]; if(!r) return;
-  const sesi = prompt('Jumlah sesi:', r.sesi); if(sesi===null) return;
-  const rate = prompt('Rate per sesi (Rp):', r.rate); if(rate===null) return;
-  const nominal = prompt('Total (Rp):', Number(sesi)*Number(rate)); if(nominal===null) return;
-  try{ await API.updateInvoiceNominal(r.id, Number(sesi), Number(rate), Number(nominal)); showToast('Tersimpan ✦','success'); loadInvoice(); }
-  catch(e){ showToast('Gagal: '+e.message,'error'); }
+  editInvId = r.id;
+  document.getElementById('invEditTitle').textContent = '✏️ Edit Invoice — '+(r.nama_murid||'')+' · '+LU.bulanID(r.bulan);
+  document.getElementById('invEditSesi').value = r.sesi;
+  document.getElementById('invEditRate').value = r.rate;
+  document.getElementById('invEditNominal').value = r.nominal;
+  document.getElementById('invEditModalBg').classList.add('open');
+}
+function invEditHitung(){
+  const s = Number(document.getElementById('invEditSesi').value)||0;
+  const rt = Number(document.getElementById('invEditRate').value)||0;
+  document.getElementById('invEditNominal').value = s*rt;
+}
+async function saveInvoiceEdit(){
+  try{
+    await API.updateInvoiceNominal(editInvId,
+      Number(document.getElementById('invEditSesi').value),
+      Number(document.getElementById('invEditRate').value),
+      Number(document.getElementById('invEditNominal').value));
+    document.getElementById('invEditModalBg').classList.remove('open');
+    showToast('Invoice tersimpan ✦','success');
+    loadInvoice();
+  }catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
 async function hapusInvoice(id){
   if(!confirm('Hapus invoice ini?')) return;
@@ -876,6 +1063,7 @@ async function buatReport(){
       API.getAbsensi({murid_id:mid, dari, sampai}),
     ]);
     if(kid){ laporan = laporan.filter(l=>l.kelas_id===kid); absensi = absensi.filter(a=>a.kelas_id===kid); }
+    laporan = laporan.filter(l=>l.status!=='pending'); // hanya yang sudah di-approve admin
     laporan.sort((a,b)=> a.tanggal > b.tanggal ? 1 : -1);
 
     const present = absensi.filter(a=>a.status==='hadir').length || laporan.length;
@@ -925,11 +1113,20 @@ async function buatReport(){
       </div>
       <div class="rs-tagline">☆ Little steps today, big <span class="pk">LEVEL UP</span> tomorrow ☆</div>`;
 
+    window._repFileName = `${m.nama} - ${periode} - Level Up Learning Center Report`;
     document.getElementById('reportSheetWrap').style.display='block';
     document.getElementById('repPrintBtn').style.display='inline-flex';
     showToast('Report siap! Klik Print / Save PDF 🖨️','success');
     document.getElementById('reportSheetWrap').scrollIntoView({behavior:'smooth'});
   }catch(e){ showToast('Gagal: '+e.message,'error'); }
+}
+
+// Nama file PDF = judul dokumen saat print, cth: "Winston - Jun 26 - Level Up Learning Center Report"
+function printReport(){
+  const oldTitle = document.title;
+  document.title = window._repFileName || oldTitle;
+  window.print();
+  setTimeout(()=>{ document.title = oldTitle; }, 1000);
 }
 
 // ── FEE GURU ────────────────────────────────────────────────
