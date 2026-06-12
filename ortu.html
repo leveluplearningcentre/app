@@ -122,7 +122,7 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
   <span class="spark" style="top:22px;left:30%">✦</span>
   <span class="spark s2" style="top:60px;right:26%">✦</span>
   <h1 id="heroTitle">Selamat Datang, <span class="hl">Parents</span> 👋</h1>
-  <p id="heroSub">Login dengan nomor HP dan PIN dari admin Level Up</p>
+  <p id="heroSub">Login dengan nomor HP yang terdaftar di admin Level Up</p>
 </div>
 
 <!-- LOGIN -->
@@ -130,16 +130,12 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
   <div class="card" style="max-width:420px;margin:0 auto">
     <div class="card-title">🔐 Masuk Portal</div>
     <div class="login-err" id="loginErr"></div>
-    <div class="form-field" style="margin-bottom:12px">
-      <label>Nomor HP (yang terdaftar di admin)</label>
-      <input type="tel" id="loginPhone" placeholder="08..." inputmode="numeric">
-    </div>
     <div class="form-field" style="margin-bottom:16px">
-      <label>PIN (6 digit dari admin)</label>
-      <input type="password" id="loginPin" placeholder="••••••" inputmode="numeric" maxlength="6" onkeydown="if(event.key==='Enter')doLogin()">
+      <label>Nomor HP (yang terdaftar di admin)</label>
+      <input type="tel" id="loginPhone" placeholder="08..." inputmode="numeric" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
     <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">✨ Masuk</button>
-    <div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-top:12px">Lupa PIN? Hubungi admin Level Up ya 🙏</div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-top:12px">Nomor belum terdaftar? Hubungi admin Level Up ya 🙏</div>
   </div>
   <div class="tagline">☆ Little steps today, big <span class="pk">LEVEL UP</span> tomorrow ☆</div>
 </main>
@@ -158,6 +154,11 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
     <div class="card-title">📝 Laporan Belajar Terbaru</div>
     <div class="prog-chips" id="progChips" style="display:none"></div>
     <div id="laporanList"><div class="empty-state">Memuat...</div></div>
+    <div id="lapPager" style="display:none;justify-content:center;align-items:center;gap:14px;margin-top:14px">
+      <button class="btn btn-blue" id="lapPrev" onclick="lapGo(-1)">◀</button>
+      <span id="lapPageInfo" style="font-weight:800;font-size:13px;color:var(--muted)">—</span>
+      <button class="btn btn-blue" id="lapNext" onclick="lapGo(1)">▶</button>
+    </div>
   </div>
 
   <div class="card">
@@ -174,14 +175,15 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
 <script src="api.js"></script>
 <script>
 let anakList = [], anak = null, uploadInvoiceId = null, progFilter = '', laporanCache = [];
+let lapPage = 1;
+const LAP_PER_PAGE = 10;
 
 window.addEventListener('DOMContentLoaded', async () => {
   const saved = sessionStorage.getItem('lu_ortu');
   if (saved) {
     try {
-      const { phone, pin } = JSON.parse(saved);
+      const { phone } = JSON.parse(saved);
       document.getElementById('loginPhone').value = phone;
-      document.getElementById('loginPin').value = pin;
       await doLogin(true);
     } catch (e) { sessionStorage.removeItem('lu_ortu'); }
   }
@@ -189,16 +191,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 async function doLogin(silent) {
   const phone = document.getElementById('loginPhone').value.trim();
-  const pin = document.getElementById('loginPin').value.trim();
   const err = document.getElementById('loginErr');
   err.style.display = 'none';
-  if (!phone || !pin) { err.textContent = 'Isi nomor HP dan PIN dulu ya 😊'; err.style.display = 'block'; return; }
+  if (!phone) { err.textContent = 'Isi nomor HP dulu ya 😊'; err.style.display = 'block'; return; }
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = '⏳ Memeriksa...';
   document.getElementById('loadingOverlay').style.display = 'flex';
   try {
-    anakList = await API.loginOrtu(phone, pin);
-    sessionStorage.setItem('lu_ortu', JSON.stringify({ phone, pin }));
+    anakList = await API.loginOrtu(phone);
+    sessionStorage.setItem('lu_ortu', JSON.stringify({ phone }));
     document.getElementById('loginView').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
     document.getElementById('logoutBtn').style.display = 'inline-block';
@@ -232,6 +233,7 @@ function pilihAnak(id) {
   document.querySelectorAll('.anak-chip').forEach(c => c.classList.toggle('active', c.id === 'chip-' + id));
   document.getElementById('heroTitle').innerHTML = `Halo, Parents of <span class="hl">${anak.nama}</span> 👋`;
   progFilter = '';
+  lapPage = 1;
   renderKelas();
   loadLaporan();
   loadInvoice();
@@ -279,13 +281,28 @@ async function loadLaporan() {
   } catch (e) { box.innerHTML = '<div class="empty-state">Gagal memuat laporan</div>'; }
 }
 
-function setProgFilter(p) { progFilter = p; loadLaporan(); }
+function setProgFilter(p) { progFilter = p; lapPage = 1; loadLaporan(); }
+
+function lapGo(d) {
+  const rows = progFilter ? laporanCache.filter(r => r.program === progFilter) : laporanCache;
+  const total = Math.max(1, Math.ceil(rows.length / LAP_PER_PAGE));
+  lapPage = Math.min(total, Math.max(1, lapPage + d));
+  renderLaporan();
+}
 
 function renderLaporan() {
   const box = document.getElementById('laporanList');
+  const pager = document.getElementById('lapPager');
   const rows = progFilter ? laporanCache.filter(r => r.program === progFilter) : laporanCache;
-  if (!rows.length) { box.innerHTML = '<div class="empty-state">Belum ada laporan ✦</div>'; return; }
-  box.innerHTML = rows.slice(0, 10).map(r => {
+  if (!rows.length) { box.innerHTML = '<div class="empty-state">Belum ada laporan ✦</div>'; pager.style.display = 'none'; return; }
+  const totalPages = Math.ceil(rows.length / LAP_PER_PAGE);
+  if (lapPage > totalPages) lapPage = totalPages;
+  const start = (lapPage - 1) * LAP_PER_PAGE;
+  pager.style.display = totalPages > 1 ? 'flex' : 'none';
+  document.getElementById('lapPageInfo').textContent = `Hal. ${lapPage} / ${totalPages} · ${rows.length} laporan`;
+  document.getElementById('lapPrev').disabled = lapPage <= 1;
+  document.getElementById('lapNext').disabled = lapPage >= totalPages;
+  box.innerHTML = rows.slice(start, start + LAP_PER_PAGE).map(r => {
     const materi = LU.parseMateri(r.materi_json);
     const first = materi[0] ? materi[0].m : '—';
     return `<div class="history-item">

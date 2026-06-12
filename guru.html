@@ -131,8 +131,21 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
       <div class="app-sub">Portal Guru</div>
     </div>
   </a>
-  <div class="header-badge">👩‍🏫 Teacher</div>
+  <div class="header-badge" id="guruBadge">👩‍🏫 Teacher</div>
+  <button id="guruLogout" onclick="guruLogout()" style="display:none;background:none;border:1.5px solid var(--border);border-radius:999px;padding:5px 12px;font-size:11px;font-weight:800;color:var(--muted);cursor:pointer">Keluar</button>
 </header>
+
+<!-- LOGIN GATE GURU -->
+<div id="guruGate" style="position:fixed;inset:0;background:var(--cream);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div class="card" style="max-width:380px;width:100%;border:2px dashed var(--blue)">
+    <div class="card-title">🔐 Login Guru</div>
+    <div id="guruGateErr" style="display:none;background:#FDEEEE;border:2px dashed #F5C2C2;border-radius:12px;padding:10px 14px;font-size:13px;color:#C0564F;font-weight:800;margin-bottom:12px"></div>
+    <div class="form-field" style="margin-bottom:16px"><label>No. HP (yang terdaftar di admin)</label>
+      <input type="tel" id="guruPhone" placeholder="08..." inputmode="numeric" onkeydown="if(event.key==='Enter')guruLogin()"></div>
+    <button class="btn btn-primary btn-full" id="guruLoginBtn" onclick="guruLogin()">✨ Masuk</button>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-top:12px">Nomor belum terdaftar? Hubungi admin ya 🙏</div>
+  </div>
+</div>
 
 <div class="hero">
   <div class="cloud c1"></div><div class="cloud c2"></div>
@@ -156,7 +169,7 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
     <div class="card-title">👤 Identitas Sesi</div>
     <div class="form-row">
       <div class="form-field">
-        <label>Pilih Guru</label>
+        <label>Guru <button onclick="reloadData(this)" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--blue-ink);font-weight:800" title="Muat ulang data dari spreadsheet">🔄 refresh data</button></label>
         <select id="guruSelect" onchange="onGuruChange()">
           <option value="">Memuat guru...</option>
         </select>
@@ -231,6 +244,60 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
 <script src="api.js"></script>
 <script>
 let guruData = [], kelasData = [], muridData = [], sesiData = [];
+let currentGuru = null;
+
+// ── LOGIN GURU (no. HP) ─────────────────────────────────────
+async function guruLogin() {
+  const phone = document.getElementById('guruPhone').value.trim();
+  const err = document.getElementById('guruGateErr');
+  err.style.display = 'none';
+  if (!phone) { err.textContent = 'Isi nomor HP dulu ya 😊'; err.style.display = 'block'; return; }
+  const btn = document.getElementById('guruLoginBtn');
+  btn.disabled = true; btn.textContent = '⏳ Memeriksa...';
+  try {
+    currentGuru = await API.loginGuru(phone);
+    sessionStorage.setItem('lu_guru', phone);
+    document.getElementById('guruGate').style.display = 'none';
+    document.getElementById('guruLogout').style.display = 'inline-block';
+    document.getElementById('guruBadge').textContent = '👩‍🏫 ' + currentGuru.nama;
+    applyGuruLock();
+  } catch (e) {
+    err.textContent = e.message; err.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = '✨ Masuk';
+}
+function guruLogout() { sessionStorage.removeItem('lu_guru'); location.reload(); }
+function applyGuruLock() {
+  if (!currentGuru) return;
+  const sel = document.getElementById('guruSelect');
+  if ([...sel.options].some(o => o.value === currentGuru.id)) {
+    sel.value = currentGuru.id;
+    sel.disabled = true;
+    onGuruChange();
+  }
+}
+
+// ── REFRESH DATA dari spreadsheet ───────────────────────────
+async function reloadData(btn) {
+  if (btn) btn.textContent = '⏳ memuat...';
+  const hasil = await Promise.allSettled([
+    API.getGuru(),
+    API.getKelas({ aktif: 'aktif' }),
+    API.getMurid({ aktif: 'aktif' }),
+    API.getSesiAllKelas(),
+  ]);
+  guruData  = hasil[0].status === 'fulfilled' ? hasil[0].value : guruData;
+  kelasData = hasil[1].status === 'fulfilled' ? hasil[1].value : kelasData;
+  muridData = hasil[2].status === 'fulfilled' ? hasil[2].value : muridData;
+  sesiData  = hasil[3].status === 'fulfilled' ? hasil[3].value : sesiData;
+  const gagal = hasil.filter(h => h.status === 'rejected');
+  if (gagal.length) showToast('Sebagian data gagal dimuat: ' + gagal[0].reason.message, 'error');
+  else if (btn) showToast('Data ter-refresh! ✦', 'success');
+  populateGuru();
+  applyGuruLock();
+  if (!currentGuru) onGuruChange();
+  if (btn) btn.textContent = '🔄 refresh data';
+}
 
 window.addEventListener('DOMContentLoaded', async () => {
   const today = new Date();
@@ -242,21 +309,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   addMateriRow();
 
-  // Load tiap data terpisah — kalau satu gagal, yang lain tetap muncul
-  const hasil = await Promise.allSettled([
-    API.getGuru(),
-    API.getKelas({ aktif: 'aktif' }),
-    API.getMurid({ aktif: 'aktif' }),
-    API.getSesiAllKelas(),
-  ]);
-  guruData  = hasil[0].status === 'fulfilled' ? hasil[0].value : [];
-  kelasData = hasil[1].status === 'fulfilled' ? hasil[1].value : [];
-  muridData = hasil[2].status === 'fulfilled' ? hasil[2].value : [];
-  sesiData  = hasil[3].status === 'fulfilled' ? hasil[3].value : [];
-  const gagal = hasil.filter(h => h.status === 'rejected');
-  if (gagal.length) showToast('Sebagian data gagal dimuat: ' + gagal[0].reason.message, 'error');
-  populateGuru();
-  onGuruChange(); // default: tampilkan semua murid
+  // Auto-login kalau pernah login di sesi ini
+  const savedPhone = sessionStorage.getItem('lu_guru');
+  if (savedPhone) {
+    try {
+      currentGuru = await API.loginGuru(savedPhone);
+      document.getElementById('guruGate').style.display = 'none';
+      document.getElementById('guruLogout').style.display = 'inline-block';
+      document.getElementById('guruBadge').textContent = '👩‍🏫 ' + currentGuru.nama;
+    } catch (e) { sessionStorage.removeItem('lu_guru'); }
+  }
+
+  await reloadData(null); // load semua data (terpisah per request)
   document.getElementById('loadingOverlay').style.display = 'none';
   updateWA();
 });

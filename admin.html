@@ -155,7 +155,21 @@ tr:hover td{background:#FFFAF8}
     <div class="app-sub">Admin Panel · Tutor ✦ Swim ✦ Art ✦ Mandarin</div>
   </div>
   <div class="header-badge">🔑 Admin</div>
+  <button id="adminLogout" onclick="adminLogout()" style="display:none;background:none;border:1.5px solid var(--border);border-radius:999px;padding:5px 12px;font-size:11px;font-weight:800;color:var(--muted);cursor:pointer">Keluar</button>
 </header>
+
+<!-- LOGIN GATE ADMIN -->
+<div id="adminGate" style="position:fixed;inset:0;background:var(--cream);z-index:800;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div class="card" style="max-width:380px;width:100%;border:2px dashed var(--pink)">
+    <div class="card-title">🔐 Login Admin</div>
+    <div id="adminGateErr" style="display:none;background:var(--red-soft);border:2px dashed #F5C2C2;border-radius:12px;padding:10px 14px;font-size:13px;color:#C0564F;font-weight:800;margin-bottom:12px"></div>
+    <div class="form-field" style="margin-bottom:12px"><label>No. HP</label>
+      <input type="tel" id="adminPhone" placeholder="08..." inputmode="numeric"></div>
+    <div class="form-field" style="margin-bottom:16px"><label>Password</label>
+      <input type="password" id="adminPass" placeholder="••••••" onkeydown="if(event.key==='Enter')adminLogin()"></div>
+    <button class="btn btn-primary" id="adminLoginBtn" style="width:100%;justify-content:center;padding:13px" onclick="adminLogin()">✨ Masuk</button>
+  </div>
+</div>
 
 <div class="tab-nav">
   <button class="tab-btn active" onclick="showTab('dashboard',this)">🏠 Dashboard</button>
@@ -218,8 +232,8 @@ tr:hover td{background:#FFFAF8}
         <input id="muridSearch" placeholder="🔍 cari nama..." oninput="renderMurid()" style="margin-left:auto;padding:7px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;outline:none;max-width:200px">
       </div>
       <div class="table-wrap">
-        <table><thead><tr><th>Nama</th><th>Program</th><th>Rate/Sesi</th><th>WA Ortu</th><th>PIN Portal</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody id="muridTbody"><tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr></tbody></table>
+        <table><thead><tr><th>Nama</th><th>Program</th><th>Rate/Sesi</th><th>WA Ortu (utk login portal)</th><th>Status</th><th>Aksi</th></tr></thead>
+        <tbody id="muridTbody"><tr><td colspan="6" class="empty"><span class="spinner"></span></td></tr></tbody></table>
       </div>
     </div>
   </div>
@@ -452,8 +466,45 @@ let editMuridId=null, editGuruId=null, editKelasId=null, kelasModalMuridId=null;
 const todayYM = new Date().toISOString().slice(0,7);
 const todayStr = new Date().toISOString().slice(0,10);
 
-// ── INIT ────────────────────────────────────────────────────
+// ── LOGIN ADMIN ─────────────────────────────────────────────
+let appStarted = false;
+async function adminLogin(){
+  const phone = document.getElementById('adminPhone').value.trim();
+  const pass  = document.getElementById('adminPass').value;
+  const err = document.getElementById('adminGateErr');
+  err.style.display='none';
+  const btn = document.getElementById('adminLoginBtn');
+  btn.disabled = true; btn.textContent = '⏳ Memeriksa...';
+  try{
+    await API.loginAdmin(phone, pass);
+    sessionStorage.setItem('lu_admin', JSON.stringify({phone, pass}));
+    document.getElementById('adminGate').style.display='none';
+    document.getElementById('adminLogout').style.display='inline-block';
+    startApp();
+  }catch(e){
+    err.textContent = e.message; err.style.display='block';
+  }
+  btn.disabled = false; btn.textContent = '✨ Masuk';
+}
+function adminLogout(){ sessionStorage.removeItem('lu_admin'); location.reload(); }
+
 window.addEventListener('DOMContentLoaded', async () => {
+  const saved = sessionStorage.getItem('lu_admin');
+  if(saved){
+    try{
+      const {phone, pass} = JSON.parse(saved);
+      await API.loginAdmin(phone, pass);
+      document.getElementById('adminGate').style.display='none';
+      document.getElementById('adminLogout').style.display='inline-block';
+      startApp();
+      return;
+    }catch(e){ sessionStorage.removeItem('lu_admin'); }
+  }
+});
+
+// ── INIT ────────────────────────────────────────────────────
+async function startApp(){
+  if(appStarted) return; appStarted = true;
   document.getElementById('absTanggal').value = todayStr;
   document.getElementById('absRekapBulan').value = todayYM;
   document.getElementById('lapBulan').value = todayYM;
@@ -464,7 +515,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('repSampai').value = todayStr;
   await refreshBaseData();
   loadDashboard();
-});
+}
 
 async function refreshBaseData(){
   // Load tiap data terpisah — kalau satu gagal, yang lain tetap tampil
@@ -557,9 +608,7 @@ function renderMurid(){
       <td><strong>${m.nama}</strong>${m.grade?` <span class="badge bg-yellow">${m.grade}</span>`:''}<br><span style="font-size:11px;color:var(--muted)">${m.kelas_sekolah||''}</span></td>
       <td>${progs.length?progs.map(progBadge).join(' '):'<span class="badge bg-red">belum ada kelas</span>'}</td>
       <td>${Number(m.rate_invoice)?LU.rp(m.rate_invoice):'<span style="color:var(--red)">belum diisi</span>'}</td>
-      <td style="font-size:12px">${m.wa_ortu||'—'}</td>
-      <td style="white-space:nowrap"><strong style="letter-spacing:1px">${m.pin||'—'}</strong>
-        <button class="btn btn-ghost btn-sm" title="Generate PIN baru" onclick="generatePinMurid('${m.id}')">🔑</button></td>
+      <td style="font-size:12px">${m.wa_ortu||'<span style="color:var(--red)">kosong — ortu tdk bisa login</span>'}</td>
       <td><span class="badge ${m.aktif==='aktif'?'bg-mint':'bg-red'}">${m.aktif}</span></td>
       <td style="white-space:nowrap">
         <button class="btn btn-blue btn-sm" onclick="openKelasModal('${m.id}')">📚 Kelas (${kls.length})</button>
@@ -567,7 +616,7 @@ function renderMurid(){
         <button class="btn btn-ghost btn-sm" title="Salin info login ortu" onclick="copyOrtuLogin('${m.id}')">🔗</button>
         <button class="btn btn-ghost btn-sm" onclick="hapusMurid('${m.id}','${(m.nama||'').replace(/'/g,"\\'")}')">🗑️</button>
       </td></tr>`;
-  }).join('') : '<tr><td colspan="7" class="empty">Tidak ada murid</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="empty">Tidak ada murid</td></tr>';
 }
 
 function editMurid(id){
@@ -618,19 +667,10 @@ async function hapusMurid(id,nama){
   try{ await API.deleteMurid(id); showToast('Terhapus','success'); await refreshBaseData(); renderMurid(); }
   catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
-async function generatePinMurid(id){
-  if(!confirm('Generate PIN baru? PIN lama tidak berlaku lagi.')) return;
-  try{
-    const r = await API.generatePin(id);
-    const m = muridData.find(x=>x.id===id); if(m) m.pin = r.pin;
-    renderMurid();
-    showToast('PIN baru: '+r.pin+' 🔑','success');
-  }catch(e){ showToast('Gagal: '+e.message,'error'); }
-}
 function copyOrtuLogin(id){
   const m = muridData.find(x=>x.id===id); if(!m) return;
   const url = location.href.replace(/admin\.html.*$/,'') + 'ortu.html';
-  const txt = `Halo Parents of ${m.nama} 👋✦\n\nPortal Orang Tua Level Up Learning Center:\n${url}\n\nLogin pakai:\n📱 No. HP: ${m.wa_ortu||'(nomor WA yang terdaftar)'}\n🔑 PIN: ${m.pin||'(hubungi admin)'}\n\nDi portal bisa lihat laporan belajar, progres sesi, dan tagihan ya 😊`;
+  const txt = `Halo Parents of ${m.nama} 👋✦\n\nPortal Orang Tua Level Up Learning Center:\n${url}\n\nLogin cukup pakai nomor WA ini (${m.wa_ortu||'nomor yang terdaftar di admin'}) ya 😊\nDi portal bisa lihat laporan belajar, progres sesi, dan tagihan.`;
   navigator.clipboard.writeText(txt);
   showToast('Info login ortu disalin — tinggal paste di WA! 🔗','success');
 }

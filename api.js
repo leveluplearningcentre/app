@@ -47,9 +47,10 @@ const API = {
   updateLaporan: (d)         => API.post({ action: 'updateLaporan', ...d }),
   deleteLaporan: (id)        => API.post({ action: 'deleteLaporan', id }),
 
-  // ORTU LOGIN
-  loginOrtu:   (phone, pin) => API.post({ action: 'loginOrtu', phone, pin }),
-  generatePin: (murid_id)   => API.post({ action: 'generatePin', murid_id }),
+  // LOGIN
+  loginOrtu:  (phone)           => API.post({ action: 'loginOrtu', phone }),
+  loginGuru:  (phone)           => API.post({ action: 'loginGuru', phone }),
+  loginAdmin: (phone, password) => API.post({ action: 'loginAdmin', phone, password }),
 
   // ABSENSI
   getAbsensi:    (opts = {})      => API.post({ action: 'getAbsensi', ...opts }),
@@ -130,7 +131,7 @@ Terima kasih banyak atas kepercayaannya 😊`),
     const materiTxt = (materi && materi.length)
       ? materi.map(x => `• ${x.m} ${LU.stars(x.s)}`).join('\n')
       : '—';
-    return `Hello mum / dads 👋✦
+    return `Hello parents 👋✦
 
 📋 Daily Report — Level Up Learning Center
 ${tglFmt}
