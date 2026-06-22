@@ -131,9 +131,9 @@ Terima kasih banyak atas kepercayaannya 😊`),
     const materiTxt = (materi && materi.length)
       ? materi.map(x => `• ${x.m} ${LU.stars(x.s)}`).join('\n')
       : '—';
-    return `Hello parents 👋✦
+    return `Hello parents ✦
 
-📋 Daily Report — Level Up Learning Center
+✦ Daily Report — Level Up Learning Center
 ${tglFmt}
 Nama: ${nama || '—'}
 Program: ${program || '—'}${tipe ? ' (' + tipe + ')' : ''}
@@ -141,7 +141,7 @@ Program: ${program || '—'}${tipe ? ' (' + tipe + ')' : ''}
 Materi hari ini:
 ${materiTxt}
 
-📝 Teacher's Note:
+Teacher's Note:
 ${catatan || '—'}
 
 ☆ Little steps today, big LEVEL UP tomorrow ☆`;

@@ -275,12 +275,14 @@ tr:hover td{background:#FFFAF8}
     <div class="card">
       <div class="card-title">📝 Laporan Harian Guru <span class="badge bg-yellow" id="pendingBadge" style="display:none"></span></div>
       <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:10px">Laporan dari guru masuk berstatus <strong>⏳ pending</strong> — cek typo &amp; bahasa (✏️), lalu ✅ approve, baru 💬 kirim ke ortu. Laporan pending tidak tampil di portal ortu &amp; report PDF.</div>
-      <div class="form-grid" style="grid-template-columns:160px 170px 170px 150px auto">
+      <div class="form-grid" style="grid-template-columns:160px 170px 170px 150px 180px auto">
         <div class="form-field"><label>Bulan</label><input type="month" id="lapBulan"></div>
         <div class="form-field"><label>Guru</label><select id="lapGuru"><option value="">Semua guru</option></select></div>
         <div class="form-field"><label>Murid</label><select id="lapMurid"><option value="">Semua murid</option></select></div>
         <div class="form-field"><label>Status</label>
           <select id="lapStatus"><option value="">Semua</option><option value="pending">⏳ Pending</option><option value="approved">✅ Approved</option></select></div>
+        <div class="form-field"><label>Urutkan</label>
+          <select id="lapSort"><option value="terbaru">Terbaru diinput</option><option value="tgl_desc">Tgl baru → lama</option><option value="tgl_asc">Tgl lama → baru</option></select></div>
         <div class="form-field" style="display:flex;align-items:flex-end">
           <button class="btn btn-blue" onclick="loadLaporan()">🔍 Filter</button>
         </div>
@@ -840,7 +842,12 @@ async function loadLaporan(){
   const m=document.getElementById('lapMurid').value; if(m) opts.murid_id=m;
   const st=document.getElementById('lapStatus').value; if(st) opts.status=st;
   try{
-    const rows = await API.getLaporan(opts);
+    let rows = await API.getLaporan(opts);
+    // Sort
+    const sortBy = document.getElementById('lapSort').value;
+    if(sortBy === 'terbaru')       rows = [...rows].reverse();
+    else if(sortBy === 'tgl_desc') rows = [...rows].sort((a,b)=> a.tanggal < b.tanggal ? 1 : -1);
+    else                           rows = [...rows].sort((a,b)=> a.tanggal > b.tanggal ? 1 : -1);
     window._lapRows = rows;
     const nPending = rows.filter(r=>r.status==='pending').length;
     const pb = document.getElementById('pendingBadge');
