@@ -671,7 +671,7 @@ async function hapusMurid(id,nama){
 }
 function copyOrtuLogin(id){
   const m = muridData.find(x=>x.id===id); if(!m) return;
-  const url = location.href.replace(/admin\.html.*$/,'') + 'ortu.html';
+  const url = 'https://leveluplearningcenter.netlify.app/ortu.html';
   const txt = `Halo Parents of ${m.nama} 👋✦\n\nPortal Orang Tua Level Up Learning Center:\n${url}\n\nLogin cukup pakai nomor WA ini (${m.wa_ortu||'nomor yang terdaftar di admin'}) ya 😊\nDi portal bisa lihat laporan belajar, progres sesi, dan tagihan.`;
   navigator.clipboard.writeText(txt);
   showToast('Info login ortu disalin — tinggal paste di WA! 🔗','success');
