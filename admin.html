@@ -845,8 +845,8 @@ async function loadLaporan(){
     let rows = await API.getLaporan(opts);
     // Sort
     const sortBy = document.getElementById('lapSort').value;
-    if(sortBy === 'terbaru')       rows = [...rows].reverse();
-    else if(sortBy === 'tgl_desc') rows = [...rows].sort((a,b)=> a.tanggal < b.tanggal ? 1 : -1);
+    if(sortBy === 'terbaru')       rows = [...rows].sort((a,b)=> (b.timestamp||'') > (a.timestamp||'') ? 1 : -1);
+    else if(sortBy === 'tgl_desc') rows = [...rows]; // server sudah sort tgl desc
     else                           rows = [...rows].sort((a,b)=> a.tanggal > b.tanggal ? 1 : -1);
     window._lapRows = rows;
     const nPending = rows.filter(r=>r.status==='pending').length;
