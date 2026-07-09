@@ -216,7 +216,14 @@ tr:hover td{background:#FFFAF8}
       <div class="form-grid">
         <div class="form-field"><label>Nama</label><input id="mNama" placeholder="Nama murid"></div>
         <div class="form-field"><label>Grade</label>
-          <select id="mGrade"><option value="">—</option><option>Growing</option><option>Improving</option><option>Advanced</option></select></div>
+          <input id="mGrade" list="gradeOptions" placeholder="cth: KG1, P3, Nursery...">
+          <datalist id="gradeOptions">
+            <option>Nursery</option><option>PreKG</option>
+            <option>KG1</option><option>KG2</option>
+            <option>P1</option><option>P2</option><option>P3</option><option>P4</option>
+            <option>P5</option><option>P6</option><option>P7</option><option>P8</option>
+            <option>P9</option><option>P10</option><option>P11</option><option>P12</option>
+          </datalist></div>
         <div class="form-field"><label>Kelas Sekolah</label><input id="mKelasSekolah" placeholder="cth: K2 Playfield"></div>
         <div class="form-field"><label>Rate Invoice /sesi (Rp)</label><input id="mRate" type="number" placeholder="200000"></div>
         <div class="form-field"><label>WA Ortu</label><input id="mWaOrtu" placeholder="08..."></div>
@@ -232,8 +239,8 @@ tr:hover td{background:#FFFAF8}
         <input id="muridSearch" placeholder="🔍 cari nama..." oninput="renderMurid()" style="margin-left:auto;padding:7px 12px;border:2px solid var(--border);border-radius:10px;font-size:13px;font-weight:700;outline:none;max-width:200px">
       </div>
       <div class="table-wrap">
-        <table><thead><tr><th>Nama</th><th>Program</th><th>Rate/Sesi</th><th>WA Ortu (utk login portal)</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody id="muridTbody"><tr><td colspan="6" class="empty"><span class="spinner"></span></td></tr></tbody></table>
+        <table><thead><tr><th>Nama</th><th>Program</th><th>Rate/Sesi</th><th>WA Ortu (utk login portal)</th><th>Status</th><th>Password Ortu</th><th>Aksi</th></tr></thead>
+        <tbody id="muridTbody"><tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr></tbody></table>
       </div>
     </div>
   </div>
@@ -325,6 +332,20 @@ tr:hover td{background:#FFFAF8}
         <table><thead><tr><th>Murid</th><th>Bulan</th><th>Program</th><th>Sesi</th><th>Rate</th><th>Total</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody id="invoiceTbody"><tr><td colspan="8" class="empty"><span class="spinner"></span></td></tr></tbody></table>
       </div>
+      <div id="invSummary" style="display:none;margin-top:14px;display:flex;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px;background:var(--bg2);border-radius:10px;padding:12px 16px">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Total Tagihan</div>
+          <div id="invTotalAll" style="font-size:18px;font-weight:800;color:var(--text);margin-top:4px">—</div>
+        </div>
+        <div style="flex:1;min-width:140px;background:#edfaf5;border-radius:10px;padding:12px 16px">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">✅ Sudah Lunas</div>
+          <div id="invTotalLunas" style="font-size:18px;font-weight:800;color:#1a9e6e;margin-top:4px">—</div>
+        </div>
+        <div style="flex:1;min-width:140px;background:#fff5f5;border-radius:10px;padding:12px 16px">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">⏳ Belum Bayar</div>
+          <div id="invTotalBelum" style="font-size:18px;font-weight:800;color:#e05252;margin-top:4px">—</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -383,8 +404,8 @@ tr:hover td{background:#FFFAF8}
     <div class="card">
       <div class="card-title">👩‍🏫 Daftar Guru</div>
       <div class="table-wrap">
-        <table><thead><tr><th>Nama</th><th>WA</th><th>Default Fee</th><th>Jml Kelas</th><th>Status</th><th>Aksi</th></tr></thead>
-        <tbody id="guruTbody"><tr><td colspan="6" class="empty"><span class="spinner"></span></td></tr></tbody></table>
+        <table><thead><tr><th>Nama</th><th>WA</th><th>Default Fee</th><th>Jml Kelas</th><th>Status</th><th>Password</th><th>Aksi</th></tr></thead>
+        <tbody id="guruTbody"><tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr></tbody></table>
       </div>
     </div>
   </div>
@@ -431,6 +452,8 @@ tr:hover td{background:#FFFAF8}
   <div class="modal">
     <button class="modal-close" onclick="document.getElementById('lapEditModalBg').classList.remove('open')">✕</button>
     <div class="card-title" id="lapEditTitle">✏️ Edit Laporan</div>
+    <div class="form-field" style="margin-bottom:12px"><label>Tanggal</label>
+      <input type="date" id="lapEditTanggal"></div>
     <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Materi &amp; Bintang</div>
     <div id="lapEditMateri"></div>
     <button class="btn btn-ghost btn-sm" onclick="addLapEditRow()" style="margin-bottom:14px">＋ Tambah materi</button>
@@ -565,12 +588,16 @@ const progBadge = p => `<span class="badge prog-${p}">${p}</span>`;
 async function loadDashboard(){
   document.getElementById('stMurid').textContent = muridData.filter(m=>m.aktif==='aktif').length;
   document.getElementById('stKelas').textContent = kelasData.filter(k=>k.aktif==='aktif').length;
+  let _inv = [];
   try{
     const [lap, inv] = await Promise.all([ API.getLaporan({bulan:todayYM}), API.getInvoice({}) ]);
+    _inv = inv;
     document.getElementById('stLaporan').textContent = lap.length;
     document.getElementById('stInvoice').textContent = inv.filter(i=>i.status!=='lunas').length;
   }catch(e){}
-  const full = sesiData.filter(s=>s.sesi>=s.kuota && s.kuota>0);
+  // murid yg sudah punya invoice pending (belum lunas) → jangan tampilkan notif lagi
+  const sudahAdaInvoice = new Set(_inv.filter(i=>i.status!=='lunas').map(i=>i.murid_id));
+  const full = sesiData.filter(s=>s.sesi>=s.kuota && s.kuota>0 && !sudahAdaInvoice.has(s.murid_id));
   document.getElementById('dashKuotaList').innerHTML = full.length
     ? full.map(s=>`<div class="alert-banner" onclick="showTab('invoice',document.querySelectorAll('.tab-btn')[4])">🔔 <strong>${s.nama}</strong> · ${s.program} (${s.tipe}) — ${s.sesi}/${s.kuota} sesi terpenuhi → buat invoice</div>`).join('')
     : '<div class="empty">Belum ada kelas yang kuotanya terpenuhi ✦</div>';
@@ -602,7 +629,8 @@ async function loadDashboard(){
 // ── MURID ───────────────────────────────────────────────────
 function renderMurid(){
   const q = (document.getElementById('muridSearch').value||'').toLowerCase();
-  const rows = muridData.filter(m=>!q || (m.nama||'').toLowerCase().includes(q));
+  const rows = muridData.filter(m=>!q || (m.nama||'').toLowerCase().includes(q))
+    .sort((a,b)=>(a.nama||'').localeCompare(b.nama||'','id'));
   document.getElementById('muridTbody').innerHTML = rows.length ? rows.map(m=>{
     const kls = kelasData.filter(k=>k.murid_id===m.id && k.aktif==='aktif');
     const progs = [...new Set(kls.map(k=>k.program))];
@@ -612,13 +640,17 @@ function renderMurid(){
       <td>${Number(m.rate_invoice)?LU.rp(m.rate_invoice):'<span style="color:var(--red)">belum diisi</span>'}</td>
       <td style="font-size:12px">${m.wa_ortu||'<span style="color:var(--red)">kosong — ortu tdk bisa login</span>'}</td>
       <td><span class="badge ${m.aktif==='aktif'?'bg-mint':'bg-red'}">${m.aktif}</span></td>
+      <td>
+        <span style="font-size:11px;color:var(--muted);font-family:monospace">${m.pin||'(belum ada)'}</span>
+        <button class="btn btn-ghost btn-sm" title="Reset password ortu" onclick="resetOrtuPw('${m.id}','${(m.nama||'').replace(/'/g,"\\'")}')">🔑</button>
+      </td>
       <td style="white-space:nowrap">
         <button class="btn btn-blue btn-sm" onclick="openKelasModal('${m.id}')">📚 Kelas (${kls.length})</button>
         <button class="btn btn-ghost btn-sm" onclick="editMurid('${m.id}')">✏️</button>
         <button class="btn btn-ghost btn-sm" title="Salin info login ortu" onclick="copyOrtuLogin('${m.id}')">🔗</button>
         <button class="btn btn-ghost btn-sm" onclick="hapusMurid('${m.id}','${(m.nama||'').replace(/'/g,"\\'")}')">🗑️</button>
       </td></tr>`;
-  }).join('') : '<tr><td colspan="6" class="empty">Tidak ada murid</td></tr>';
+  }).join('') : '<tr><td colspan="7" class="empty">Tidak ada murid</td></tr>';
 }
 
 function editMurid(id){
@@ -672,9 +704,28 @@ async function hapusMurid(id,nama){
 function copyOrtuLogin(id){
   const m = muridData.find(x=>x.id===id); if(!m) return;
   const url = 'https://leveluplearningcenter.netlify.app/ortu.html';
-  const txt = `Halo Parents of ${m.nama} 👋✦\n\nPortal Orang Tua Level Up Learning Center:\n${url}\n\nLogin cukup pakai nomor WA ini (${m.wa_ortu||'nomor yang terdaftar di admin'}) ya 😊\nDi portal bisa lihat laporan belajar, progres sesi, dan tagihan.`;
+  const pwInfo = m.pin ? `Password: ${m.pin}` : 'Password: (hubungi admin untuk mendapatkan password)';
+  const txt = `Halo Parents of ${m.nama} ✦\n\nPortal Orang Tua Level Up Learning Center:\n${url}\n\nNomor WA: ${m.wa_ortu||'nomor yang terdaftar di admin'}\n${pwInfo}\n\nDi portal bisa lihat laporan belajar, progres sesi, dan tagihan.`;
   navigator.clipboard.writeText(txt);
   showToast('Info login ortu disalin — tinggal paste di WA! 🔗','success');
+}
+async function resetOrtuPw(id, nama){
+  if(!confirm(`Reset password ortu untuk ${nama}?\nPassword baru akan digenerate otomatis.`)) return;
+  try{
+    const result = await API.resetOrtuPassword(id);
+    await refreshBaseData(); renderMurid();
+    showToast(`Password ortu ${nama} direset! Password baru: ${result.pin||result}`, 'success');
+  } catch(e){ showToast('Gagal: '+e.message,'error'); }
+}
+async function setGuruPw(id, nama){
+  const pw = prompt(`Set password untuk ${nama}:\n(kosongkan untuk batal)`);
+  if(pw===null || pw.trim()==='') return;
+  if(pw.trim().length < 4){ showToast('Password minimal 4 karakter','error'); return; }
+  try{
+    await API.setGuruPassword(id, pw.trim());
+    await refreshBaseData(); renderGuru();
+    showToast(`Password ${nama} berhasil diset! ✦`, 'success');
+  } catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
 
 // ── KELAS MODAL ─────────────────────────────────────────────
@@ -935,6 +986,7 @@ function editLaporanModal(i){
   const list = document.getElementById('lapEditMateri');
   list.innerHTML = '';
   (materi.length?materi:[{m:'',s:3}]).forEach(x=>addLapEditRow(x.m,x.s));
+  document.getElementById('lapEditTanggal').value = r.tanggal||'';
   document.getElementById('lapEditCatatan').value = r.catatan||'';
   document.getElementById('lapEditApprove').checked = r.status!=='pending';
   document.getElementById('lapEditModalBg').classList.add('open');
@@ -965,6 +1017,7 @@ async function saveLaporanEdit(){
   try{
     await API.updateLaporan({
       id: editLapId,
+      tanggal: document.getElementById('lapEditTanggal').value,
       materi,
       catatan: document.getElementById('lapEditCatatan').value,
       status: document.getElementById('lapEditApprove').checked ? 'approved' : 'pending',
@@ -1063,6 +1116,17 @@ async function loadInvoice(){
         <button class="btn btn-ghost btn-sm" onclick="editInvoice(${i})">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="hapusInvoice('${r.id}')">🗑️</button>
       </td></tr>`).join('') : '<tr><td colspan="8" class="empty">Belum ada invoice bulan ini ✦</td></tr>';
+    // Summary totals
+    const totalAll   = rows.reduce((s,r)=>s+Number(r.nominal||0), 0);
+    const totalLunas = rows.filter(r=>r.status==='lunas').reduce((s,r)=>s+Number(r.nominal||0), 0);
+    const totalBelum = totalAll - totalLunas;
+    const summary = document.getElementById('invSummary');
+    if(rows.length){
+      document.getElementById('invTotalAll').textContent   = LU.rp(totalAll);
+      document.getElementById('invTotalLunas').textContent = LU.rp(totalLunas);
+      document.getElementById('invTotalBelum').textContent = LU.rp(totalBelum);
+      summary.style.display = 'flex';
+    } else { summary.style.display = 'none'; }
   }catch(e){ tbody.innerHTML='<tr><td colspan="8" class="empty">Gagal: '+e.message+'</td></tr>'; }
 }
 function kirimInvWA(i){
@@ -1231,15 +1295,28 @@ async function loadFeeGuru(){
           <strong style="font-family:'Baloo 2',cursive;font-size:15px">👩‍🏫 ${r.nama_guru}</strong>
           <span class="badge bg-pink">${r.total_sesi} sesi laporan</span>
           <span style="margin-left:auto;font-weight:900;font-size:15px;color:var(--blue-ink)">${LU.rp(r.total_fee)}</span>
-          <button class="btn btn-ghost btn-sm" onclick="toggleFeeDet(${i})">detail ▾</button>
+          <button class="btn btn-ghost btn-sm" onclick="showFeeTab(${i},'rekap')">📋 Rekap</button>
+          <button class="btn btn-ghost btn-sm" onclick="showFeeTab(${i},'tanggal')">📅 Tanggal</button>
           <button class="btn btn-blue btn-sm" onclick="copyFeeRekap(${i})" title="Salin rekap">📋</button>
         </div>
         <div id="feeDet${i}" style="display:none;margin-top:10px">
-          <div class="table-wrap" style="background:var(--white)">
-            <table style="min-width:0"><thead><tr><th>Murid</th><th>Program</th><th>Sesi</th><th>Fee/Sesi</th><th>Subtotal</th></tr></thead>
-            <tbody>${r.detail.map(d=>`<tr><td>${d.nama_murid}</td><td>${progBadge(d.program)} <span style="font-size:11px;color:var(--muted)">${d.tipe}</span></td>
-              <td>${d.sesi}</td><td>${d.fee_per_sesi?LU.rp(d.fee_per_sesi):'<span style="color:var(--red)">Rp 0 — isi fee kelas!</span>'}</td>
-              <td><strong>${LU.rp(d.subtotal)}</strong></td></tr>`).join('')}</tbody></table>
+          <div id="feeDetRekap${i}" style="display:none">
+            <div class="table-wrap" style="background:var(--white)">
+              <table style="min-width:0"><thead><tr><th>Murid</th><th>Program</th><th>Sesi</th><th>Fee/Sesi</th><th>Subtotal</th></tr></thead>
+              <tbody>${r.detail.map(d=>`<tr><td>${d.nama_murid}</td><td>${progBadge(d.program)} <span style="font-size:11px;color:var(--muted)">${d.tipe}</span></td>
+                <td>${d.sesi}</td><td>${d.fee_per_sesi?LU.rp(d.fee_per_sesi):'<span style="color:var(--red)">Rp 0 — isi fee kelas!</span>'}</td>
+                <td><strong>${LU.rp(d.subtotal)}</strong></td></tr>`).join('')}</tbody></table>
+            </div>
+          </div>
+          <div id="feeDetTanggal${i}" style="display:none">
+            <div class="table-wrap" style="background:var(--white)">
+              <table style="min-width:0"><thead><tr><th>Murid</th><th>Program</th><th>Tanggal Sesi</th></tr></thead>
+              <tbody>${r.detail.map(d=>`<tr>
+                <td>${d.nama_murid}</td>
+                <td>${progBadge(d.program)}</td>
+                <td style="font-size:12px;line-height:1.8">${(d.tanggal||[]).map(t=>LU.fmtDateDDMM(t)).join(' &nbsp;·&nbsp; ')||'—'}</td>
+              </tr>`).join('')}</tbody></table>
+            </div>
           </div>
         </div>
       </div>`).join('') +
@@ -1247,9 +1324,16 @@ async function loadFeeGuru(){
     window._feeRows = rows; window._feeBulan = bln;
   }catch(e){ box.innerHTML='<div class="empty">Gagal: '+e.message+'</div>'; }
 }
-function toggleFeeDet(i){
-  const el = document.getElementById('feeDet'+i);
-  el.style.display = el.style.display==='none' ? 'block' : 'none';
+function showFeeTab(i, tab){
+  const det = document.getElementById('feeDet'+i);
+  const rekap = document.getElementById('feeDetRekap'+i);
+  const tanggal = document.getElementById('feeDetTanggal'+i);
+  const isOpen = det.style.display !== 'none';
+  const isSameTab = (tab==='rekap' && rekap.style.display!=='none') || (tab==='tanggal' && tanggal.style.display!=='none');
+  if(isOpen && isSameTab){ det.style.display='none'; return; }
+  det.style.display = 'block';
+  rekap.style.display    = tab==='rekap'    ? 'block' : 'none';
+  tanggal.style.display  = tab==='tanggal'  ? 'block' : 'none';
 }
 function copyFeeRekap(i){
   const r = (window._feeRows||[])[i]; if(!r) return;
@@ -1267,11 +1351,15 @@ function renderGuru(){
     return `<tr><td><strong>${g.nama}</strong></td><td style="font-size:12px">${g.wa||'—'}</td>
     <td>${Number(g.default_fee)?LU.rp(g.default_fee):'—'}</td><td>${n}</td>
     <td><span class="badge ${g.aktif!=='nonaktif'?'bg-mint':'bg-red'}">${g.aktif||'aktif'}</span></td>
+    <td>
+      <span style="font-size:11px;color:var(--muted);font-family:monospace">${g.password||'(belum ada)'}</span>
+      <button class="btn btn-ghost btn-sm" title="Set/reset password guru" onclick="setGuruPw('${g.id}','${(g.nama||'').replace(/'/g,"\\'")}')">🔑</button>
+    </td>
     <td style="white-space:nowrap">
       <button class="btn btn-ghost btn-sm" onclick="editGuru('${g.id}')">✏️</button>
       <button class="btn btn-ghost btn-sm" onclick="hapusGuru('${g.id}','${(g.nama||'').replace(/'/g,"\\'")}')">🗑️</button>
     </td></tr>`;
-  }).join('') : '<tr><td colspan="6" class="empty">Belum ada guru</td></tr>';
+  }).join('') : '<tr><td colspan="7" class="empty">Belum ada guru</td></tr>';
 }
 function editGuru(id){
   const g = guruData.find(x=>x.id===id); if(!g) return;

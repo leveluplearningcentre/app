@@ -134,8 +134,12 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
       <label>Nomor HP (yang terdaftar di admin)</label>
       <input type="tel" id="loginPhone" placeholder="08..." inputmode="numeric" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
+    <div class="form-field" style="margin-bottom:16px">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="Password dari admin" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
     <button class="btn btn-primary btn-full" id="loginBtn" onclick="doLogin()">✨ Masuk</button>
-    <div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-top:12px">Nomor belum terdaftar? Hubungi admin Level Up ya 🙏</div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-top:12px">Lupa password? Hubungi admin Level Up ya 🙏</div>
   </div>
   <div class="tagline">☆ Little steps today, big <span class="pk">LEVEL UP</span> tomorrow ☆</div>
 </main>
@@ -167,6 +171,15 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
     <input type="file" id="buktiFile" accept="image/*" style="display:none" onchange="uploadBuktiFile()">
   </div>
 
+  <div class="card">
+    <div class="card-title">🔑 Ganti Password</div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:14px">Password minimal 4 karakter. Setelah ganti, gunakan password baru untuk login berikutnya.</div>
+    <div class="form-field" style="margin-bottom:12px"><label>Password Lama</label><input type="password" id="oldPw" placeholder="Password saat ini"></div>
+    <div class="form-field" style="margin-bottom:12px"><label>Password Baru</label><input type="password" id="newPw" placeholder="Min. 4 karakter"></div>
+    <div class="form-field" style="margin-bottom:16px"><label>Konfirmasi Password Baru</label><input type="password" id="confirmPw" placeholder="Ulangi password baru"></div>
+    <button class="btn btn-primary" onclick="gantiPassword()">🔑 Simpan Password Baru</button>
+  </div>
+
   <div class="tagline">☆ Little steps today, big <span class="pk">LEVEL UP</span> tomorrow ☆</div>
 </main>
 
@@ -182,8 +195,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   const saved = sessionStorage.getItem('lu_ortu');
   if (saved) {
     try {
-      const { phone } = JSON.parse(saved);
+      const { phone, password } = JSON.parse(saved);
       document.getElementById('loginPhone').value = phone;
+      document.getElementById('loginPassword').value = password || '';
       await doLogin(true);
     } catch (e) { sessionStorage.removeItem('lu_ortu'); }
   }
@@ -191,15 +205,17 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 async function doLogin(silent) {
   const phone = document.getElementById('loginPhone').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
   const err = document.getElementById('loginErr');
   err.style.display = 'none';
   if (!phone) { err.textContent = 'Isi nomor HP dulu ya 😊'; err.style.display = 'block'; return; }
+  if (!password) { err.textContent = 'Isi password dulu ya 😊'; err.style.display = 'block'; return; }
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = '⏳ Memeriksa...';
   document.getElementById('loadingOverlay').style.display = 'flex';
   try {
-    anakList = await API.loginOrtu(phone);
-    sessionStorage.setItem('lu_ortu', JSON.stringify({ phone }));
+    anakList = await API.loginOrtu(phone, password);
+    sessionStorage.setItem('lu_ortu', JSON.stringify({ phone, password }));
     document.getElementById('loginView').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
     document.getElementById('logoutBtn').style.display = 'inline-block';
@@ -358,6 +374,25 @@ async function uploadBuktiFile() {
     loadInvoice();
   } catch (e) { showToast('Gagal upload: ' + e.message, 'error'); }
   document.getElementById('buktiFile').value = '';
+}
+
+async function gantiPassword() {
+  const oldPw = document.getElementById('oldPw').value.trim();
+  const newPw = document.getElementById('newPw').value.trim();
+  const confirmPw = document.getElementById('confirmPw').value.trim();
+  if (!oldPw || !newPw || !confirmPw) { showToast('Semua field harus diisi', 'error'); return; }
+  if (newPw !== confirmPw) { showToast('Password baru tidak cocok', 'error'); return; }
+  if (newPw.length < 4) { showToast('Password baru minimal 4 karakter', 'error'); return; }
+  try {
+    await API.changeOrtuPassword(anakList[0].id, oldPw, newPw);
+    // Update sessionStorage dengan password baru
+    const saved = JSON.parse(sessionStorage.getItem('lu_ortu') || '{}');
+    sessionStorage.setItem('lu_ortu', JSON.stringify({ ...saved, password: newPw }));
+    document.getElementById('oldPw').value = '';
+    document.getElementById('newPw').value = '';
+    document.getElementById('confirmPw').value = '';
+    showToast('Password berhasil diganti! ✦', 'success');
+  } catch (e) { showToast('Gagal: ' + e.message, 'error'); }
 }
 
 function showToast(msg, type = '') {

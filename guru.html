@@ -142,8 +142,10 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
     <div id="guruGateErr" style="display:none;background:#FDEEEE;border:2px dashed #F5C2C2;border-radius:12px;padding:10px 14px;font-size:13px;color:#C0564F;font-weight:800;margin-bottom:12px"></div>
     <div class="form-field" style="margin-bottom:16px"><label>No. HP (yang terdaftar di admin)</label>
       <input type="tel" id="guruPhone" placeholder="08..." inputmode="numeric" onkeydown="if(event.key==='Enter')guruLogin()"></div>
+    <div class="form-field" style="margin-bottom:16px"><label>Password</label>
+      <input type="password" id="guruPassword" placeholder="Password dari admin" onkeydown="if(event.key==='Enter')guruLogin()"></div>
     <button class="btn btn-primary btn-full" id="guruLoginBtn" onclick="guruLogin()">✨ Masuk</button>
-    <div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-top:12px">Nomor belum terdaftar? Hubungi admin ya 🙏</div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;text-align:center;margin-top:12px">Lupa password? Hubungi admin ya 🙏</div>
   </div>
 </div>
 
@@ -237,6 +239,18 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
   <div id="step2Btns" style="display:none">
     <button class="btn btn-dark" style="width:100%;justify-content:center" onclick="resetForm()">✏️ Isi Laporan Baru</button>
   </div>
+
+  <!-- GANTI PASSWORD -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title" style="cursor:pointer" onclick="document.getElementById('gantiPwPanel').style.display=document.getElementById('gantiPwPanel').style.display==='none'?'block':'none'">🔑 Ganti Password ▾</div>
+    <div id="gantiPwPanel" style="display:none;margin-top:12px">
+      <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:12px">Password minimal 4 karakter. Setelah ganti, gunakan password baru untuk login berikutnya.</div>
+      <div class="form-field" style="margin-bottom:10px"><label>Password Lama</label><input type="password" id="gOldPw" placeholder="Password saat ini"></div>
+      <div class="form-field" style="margin-bottom:10px"><label>Password Baru</label><input type="password" id="gNewPw" placeholder="Min. 4 karakter"></div>
+      <div class="form-field" style="margin-bottom:14px"><label>Konfirmasi Password Baru</label><input type="password" id="gConfirmPw" placeholder="Ulangi password baru"></div>
+      <button class="btn btn-primary" onclick="gantiPasswordGuru()">🔑 Simpan Password Baru</button>
+    </div>
+  </div>
 </main>
 
 <div id="toast">—</div>
@@ -249,14 +263,16 @@ let currentGuru = null;
 // ── LOGIN GURU (no. HP) ─────────────────────────────────────
 async function guruLogin() {
   const phone = document.getElementById('guruPhone').value.trim();
+  const password = document.getElementById('guruPassword').value.trim();
   const err = document.getElementById('guruGateErr');
   err.style.display = 'none';
   if (!phone) { err.textContent = 'Isi nomor HP dulu ya 😊'; err.style.display = 'block'; return; }
+  if (!password) { err.textContent = 'Isi password dulu ya 😊'; err.style.display = 'block'; return; }
   const btn = document.getElementById('guruLoginBtn');
   btn.disabled = true; btn.textContent = '⏳ Memeriksa...';
   try {
-    currentGuru = await API.loginGuru(phone);
-    sessionStorage.setItem('lu_guru', phone);
+    currentGuru = await API.loginGuru(phone, password);
+    sessionStorage.setItem('lu_guru', JSON.stringify({ phone, password }));
     document.getElementById('guruGate').style.display = 'none';
     document.getElementById('guruLogout').style.display = 'inline-block';
     document.getElementById('guruBadge').textContent = '👩‍🏫 ' + currentGuru.nama;
@@ -267,6 +283,26 @@ async function guruLogin() {
   btn.disabled = false; btn.textContent = '✨ Masuk';
 }
 function guruLogout() { sessionStorage.removeItem('lu_guru'); location.reload(); }
+
+async function gantiPasswordGuru() {
+  const oldPw = document.getElementById('gOldPw').value.trim();
+  const newPw = document.getElementById('gNewPw').value.trim();
+  const confirmPw = document.getElementById('gConfirmPw').value.trim();
+  if (!oldPw || !newPw || !confirmPw) { showToast('Semua field harus diisi', 'error'); return; }
+  if (newPw !== confirmPw) { showToast('Password baru tidak cocok', 'error'); return; }
+  if (newPw.length < 4) { showToast('Password baru minimal 4 karakter', 'error'); return; }
+  if (!currentGuru) { showToast('Login dulu ya', 'error'); return; }
+  try {
+    await API.changeGuruPassword(currentGuru.id, oldPw, newPw);
+    const saved = JSON.parse(sessionStorage.getItem('lu_guru') || '{}');
+    sessionStorage.setItem('lu_guru', JSON.stringify({ ...saved, password: newPw }));
+    document.getElementById('gOldPw').value = '';
+    document.getElementById('gNewPw').value = '';
+    document.getElementById('gConfirmPw').value = '';
+    document.getElementById('gantiPwPanel').style.display = 'none';
+    showToast('Password berhasil diganti! ✦', 'success');
+  } catch (e) { showToast('Gagal: ' + e.message, 'error'); }
+}
 function applyGuruLock() {
   if (!currentGuru) return;
   const sel = document.getElementById('guruSelect');
@@ -310,13 +346,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   addMateriRow();
 
   // Auto-login kalau pernah login di sesi ini
-  const savedPhone = sessionStorage.getItem('lu_guru');
-  if (savedPhone) {
+  const savedGuru = (() => { try { return JSON.parse(sessionStorage.getItem('lu_guru') || 'null'); } catch { return null; } })();
+  if (savedGuru && savedGuru.phone && savedGuru.password) {
     try {
-      currentGuru = await API.loginGuru(savedPhone);
+      currentGuru = await API.loginGuru(savedGuru.phone, savedGuru.password);
       document.getElementById('guruGate').style.display = 'none';
       document.getElementById('guruLogout').style.display = 'inline-block';
       document.getElementById('guruBadge').textContent = '👩‍🏫 ' + currentGuru.nama;
+      applyGuruLock();
     } catch (e) { sessionStorage.removeItem('lu_guru'); }
   }
 

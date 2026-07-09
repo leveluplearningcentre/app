@@ -48,9 +48,15 @@ const API = {
   deleteLaporan: (id)        => API.post({ action: 'deleteLaporan', id }),
 
   // LOGIN
-  loginOrtu:  (phone)           => API.post({ action: 'loginOrtu', phone }),
-  loginGuru:  (phone)           => API.post({ action: 'loginGuru', phone }),
+  loginOrtu:  (phone, password) => API.post({ action: 'loginOrtu', phone, password }),
+  loginGuru:  (phone, password) => API.post({ action: 'loginGuru', phone, password }),
   loginAdmin: (phone, password) => API.post({ action: 'loginAdmin', phone, password }),
+
+  // PASSWORD MANAGEMENT
+  changeOrtuPassword: (murid_id, old_pw, new_pw) => API.post({ action: 'changeOrtuPassword', murid_id, old_pw, new_pw }),
+  changeGuruPassword: (guru_id, old_pw, new_pw)  => API.post({ action: 'changeGuruPassword', guru_id, old_pw, new_pw }),
+  resetOrtuPassword:  (murid_id)                  => API.post({ action: 'resetOrtuPassword', murid_id }),
+  setGuruPassword:    (guru_id, password)          => API.post({ action: 'setGuruPassword', guru_id, password }),
 
   // ABSENSI
   getAbsensi:    (opts = {})      => API.post({ action: 'getAbsensi', ...opts }),
