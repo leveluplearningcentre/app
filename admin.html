@@ -1216,7 +1216,8 @@ async function buatReport(){
     laporan = laporan.filter(l=>l.status!=='pending'); // hanya yang sudah di-approve admin
     laporan.sort((a,b)=> a.tanggal > b.tanggal ? 1 : -1);
 
-    const present = absensi.filter(a=>a.status==='hadir').length || laporan.length;
+    // Present = tanggal unik di laporan (1 tanggal = 1 sesi hadir, laporan = sumber kebenaran)
+    const present = new Set(laporan.map(l=>l.tanggal)).size;
     const absent  = absensi.filter(a=>a.status && a.status!=='hadir').length;
     const periode = document.getElementById('repPeriode').value.trim() || periodeLabel(dari,sampai);
     let note = document.getElementById('repNote').value.trim();
