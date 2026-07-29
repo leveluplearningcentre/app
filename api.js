@@ -7,7 +7,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQj-Gwe8aAGusSubJyi
 
 const API = {
   async post(payload) {
-    const res  = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
+    const res  = await fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload), credentials: 'omit' });
     const json = await res.json();
     if (json.status === 'error') throw new Error(json.message);
     return json.data;
