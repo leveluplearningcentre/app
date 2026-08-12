@@ -493,7 +493,7 @@ const API = {
     const f = {};
     if (p.murid_id) f.murid_id = 'eq.' + p.murid_id;
     if (p.bulan)    f.bulan    = 'eq.' + String(p.bulan).slice(0, 7);
-    return SB.select('invoice', f, 'order=bulan.desc');
+    return SB.select('invoice', f, 'order=bulan.desc,created_at.desc');
   },
 
   async generateInvoice(p) {
