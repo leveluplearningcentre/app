@@ -1400,6 +1400,12 @@ async function hapusGuru(id,nama){
   try{ await API.deleteGuru(id); showToast('Terhapus','success'); await refreshBaseData(); renderGuru(); }
   catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
+
+// ── Cegah input angka berubah saat scroll mouse di atasnya ──
+document.addEventListener('wheel', function(e){
+  const el = document.activeElement;
+  if(el && el.type === 'number' && el === e.target) el.blur();
+}, { passive: true });
 </script>
 </body>
 </html>
