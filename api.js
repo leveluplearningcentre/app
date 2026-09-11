@@ -11,12 +11,9 @@ const SB = {
   headers(extra = {}) {
     return { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', ...extra };
   },
-  async req(path, opts = {}) {
-    // Range 0-99999 → lewati batas default 1000 baris PostgREST
-    const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
-      ...opts,
-      headers: SB.headers({ 'Range-Unit': 'items', Range: '0-99999', ...opts.headers }),
-    });
+  // Satu kali request (tanpa paging)
+  async raw(path, opts = {}) {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { ...opts, headers: SB.headers(opts.headers) });
     const text = await res.text();
     if (!res.ok) {
       let msg = text;
@@ -26,6 +23,34 @@ const SB = {
     if (!text) return null;
     try { return JSON.parse(text); } catch { return null; }
   },
+
+  // GET dengan paging otomatis — Supabase membatasi 1000 baris per request,
+  // jadi data diambil bertahap sampai habis. WAJIB ada urutan tetap supaya
+  // tidak ada baris yang terlewat / dobel antar halaman.
+  async req(path, opts = {}) {
+    const isGet = !opts.method || String(opts.method).toUpperCase() === 'GET';
+    if (!isGet) return SB.raw(path, opts);
+
+    // pastikan ada urutan tetap (primary key sebagai tie-breaker)
+    const pk = path.startsWith('setting') ? 'key' : 'id';
+    let p = path;
+    if (!/[?&]order=/.test(p)) p += (p.includes('?') ? '&' : '?') + `order=${pk}.asc`;
+    else if (!new RegExp(`order=[^&]*\\b${pk}\\b`).test(p)) p = p.replace(/([?&]order=[^&]*)/, `$1,${pk}.asc`);
+
+    const PAGE = 1000;
+    const out = [];
+    for (let from = 0; ; from += PAGE) {
+      const chunk = await SB.raw(p, {
+        ...opts,
+        headers: { 'Range-Unit': 'items', Range: `${from}-${from + PAGE - 1}`, ...opts.headers },
+      });
+      if (!Array.isArray(chunk)) return chunk;
+      out.push(...chunk);
+      if (chunk.length < PAGE) break;
+    }
+    return out;
+  },
+
   // SELECT — filters: { col: 'eq.value' } atau raw string
   select(table, filters = {}, extra = '') {
     const qs = Object.entries(filters).map(([k, v]) => `${k}=${v}`).join('&');
