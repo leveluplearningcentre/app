@@ -184,6 +184,7 @@ const API = {
       program: p.program || 'Tutor',
       tipe: p.tipe || 'Private',
       jadwal: p.jadwal || '',
+      ...(Array.isArray(p.jadwal_slots) ? { jadwal_slots: p.jadwal_slots } : {}),
       sesi_kuota: Math.max(0, _n(p.sesi_kuota)) || 8,
       fee_guru: Math.max(0, _n(p.fee_guru)),
       tgl_mulai_term: _d(p.tgl_mulai_term),
@@ -200,6 +201,7 @@ const API = {
       program: p.program,
       tipe: p.tipe,
       jadwal: p.jadwal,
+      jadwal_slots: Array.isArray(p.jadwal_slots) ? p.jadwal_slots : undefined,
       sesi_kuota: p.sesi_kuota !== undefined ? Math.max(0, _n(p.sesi_kuota)) : undefined,
       fee_guru:   p.fee_guru   !== undefined ? Math.max(0, _n(p.fee_guru))   : undefined,
       tgl_mulai_term: p.tgl_mulai_term !== undefined ? _d(p.tgl_mulai_term) : undefined,
@@ -240,13 +242,14 @@ const API = {
       const since = sinceMap[k.murid_id] || null;
       // Prioritas: tgl_mulai_term (diisi admin) → since dari invoice lunas → hitung semua
       const startDate = k.tgl_mulai_term || since || null;
-      // Sesi = tanggal unik dari laporan (pending & approved sama-sama dihitung)
+      // Sesi = jumlah laporan (pending & approved sama-sama dihitung).
+      // 2 laporan di hari yang sama = 2 sesi (mis. hari itu dobel sesi).
       const tgl = (lapByKelas[k.id] || []).filter(t => t && (!startDate || t >= startDate));
       return {
         kelas_id: k.id, murid_id: k.murid_id, nama: k.nama_murid,
         guru_id: k.guru_id, nama_guru: k.nama_guru,
         program: k.program, tipe: k.tipe, jadwal: k.jadwal,
-        sesi: new Set(tgl).size, kuota: _n(k.sesi_kuota) || 8, since,
+        sesi: tgl.length, kuota: _n(k.sesi_kuota) || 8, since,
         tgl_mulai_term: k.tgl_mulai_term || '', tgl_akhir_term: k.tgl_akhir_term || '',
       };
     });
@@ -614,12 +617,12 @@ const LU = {
   },
   stars: (n) => '★'.repeat(Number(n) || 0) + '☆'.repeat(Math.max(0, 4 - (Number(n) || 0))),
   // Template WA invoice LevelUp
-  waInvoice: ({ bulan, nama, program, sesi, rate, total }) => (
+  waInvoice: ({ bulan, nama, program, periode, jadwal, sesi, rate, total }) => (
 `Dear Parents,
 Berikut kami informasikan billing bulan ${bulan}
 
 Nama Anak: ${nama}
-Program: ${program}
+Program: ${program}${periode ? `\nPeriode: ${periode}` : ''}${jadwal ? `\nJadwal: ${jadwal}` : ''}
 Jumlah Sesi: ${sesi}
 💰 Rate: ${LU.rp(rate)}/ sesi
 💰 Total: ${LU.rp(total)}

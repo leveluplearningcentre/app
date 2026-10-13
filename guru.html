@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest-guru.json">
+<meta name="theme-color" content="#7FA8D9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="LU Guru">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>Portal Guru – Level Up Learning Center</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -114,6 +120,15 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 #toast.success{background:var(--green)}
 #toast.error{background:var(--red)}
+/* TABS */
+.tab-nav{background:var(--white);border-bottom:1.5px solid var(--border);padding:0 12px;display:flex;justify-content:center;gap:2px;position:sticky;top:62px;z-index:90}
+.tab-btn{background:none;border:none;color:var(--muted);font-size:14px;font-weight:800;padding:13px 18px;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s}
+.tab-btn.active{color:var(--pink-ink);border-bottom-color:var(--pink-dark)}
+.tab-page{display:none}.tab-page.active{display:block}
+.pengganti-toggle{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--blue-ink);margin-top:-4px;margin-bottom:10px;cursor:pointer}
+.pengganti-toggle input{width:17px;height:17px;accent-color:var(--blue-dark)}
+.tt-filter{padding:7px 10px;border:2px solid var(--border);border-radius:10px;font-weight:700;font-size:13px;background:#fff}
+.miss-item{font-size:13px;font-weight:700;padding:8px 10px;border:1.5px dashed #F5C2C2;border-radius:12px;margin-bottom:6px;cursor:pointer;background:#FFF8F8}
 </style>
 </head>
 <body>
@@ -159,7 +174,13 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
   <span class="hero-date" id="heroDate">📅 —</span>
 </div>
 
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('laporan',this)">📝 Laporan</button>
+  <button class="tab-btn" onclick="showTab('jadwal',this)">📅 Jadwal Saya</button>
+</div>
+
 <main>
+ <div class="tab-page active" id="tab-laporan">
   <div class="step-bar">
     <div class="step-dot active" id="s1">1</div>
     <div class="step-line" id="sl1"></div>
@@ -183,6 +204,7 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
         </select>
       </div>
     </div>
+    <label class="pengganti-toggle"><input type="checkbox" id="modePengganti" onchange="onGuruChange()"> 🔄 Saya menggantikan guru lain hari ini (tampilkan semua murid)</label>
     <div class="form-row">
       <div class="form-field">
         <label>Tanggal Sesi</label>
@@ -251,11 +273,39 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
       <button class="btn btn-primary" onclick="gantiPasswordGuru()">🔑 Simpan Password Baru</button>
     </div>
   </div>
+ </div>
+
+ <!-- JADWAL SAYA -->
+ <div class="tab-page" id="tab-jadwal">
+  <div class="card">
+    <div class="card-title">⚠️ Laporan yang Belum Diisi</div>
+    <div id="gMissing"><div class="empty-state">—</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="flex-wrap:wrap">📅 Jadwal Mengajar
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-ghost" style="padding:6px 10px" onclick="gTtGo(-1)">◀</button>
+        <button class="btn btn-ghost" style="padding:6px 10px" onclick="gTtGo(0)">Minggu ini</button>
+        <button class="btn btn-ghost" style="padding:6px 10px" onclick="gTtGo(1)">▶</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap">
+      <span id="gTtRange" style="font-weight:900;font-size:14px;margin-right:auto">—</span>
+      <select id="gTtHari" class="tt-filter" onchange="gRenderTt()">
+        <option value="">Seminggu</option><option value="1">Senin</option><option value="2">Selasa</option><option value="3">Rabu</option><option value="4">Kamis</option><option value="5">Jumat</option><option value="6">Sabtu</option><option value="7">Minggu</option>
+      </select>
+    </div>
+    <div id="gTtGrid"><div class="empty-state">Login dulu untuk melihat jadwal ✦</div></div>
+    <div class="tt-legend"><span>✅ laporan masuk</span><span>⚠️ belum ada laporan</span><span>⏳ hari ini</span></div>
+    <div style="font-size:12px;color:var(--muted);font-weight:700;margin-top:6px">Tap jadwal yang belum ada laporannya → langsung ke form laporan ✦ · Jadwal diatur oleh admin</div>
+  </div>
+ </div>
 </main>
 
 <div id="toast">—</div>
 
 <script src="api.js"></script>
+<script src="jadwal.js"></script>
 <script>
 let guruData = [], kelasData = [], muridData = [], sesiData = [];
 let currentGuru = null;
@@ -373,9 +423,14 @@ function onGuruChange() {
   const gid = document.getElementById('guruSelect').value;
   const sel = document.getElementById('kelasSelect');
   // Default (belum pilih guru): tampilkan SEMUA murid; setelah pilih guru: difilter
-  const list = gid ? kelasData.filter(k => k.guru_id === gid) : kelasData;
+  // Mode pengganti: tampilkan semua kelas → laporan tetap masuk ke kelas murid aslinya
+  // (sesi murid ikut terhitung), fee dihitung ke guru pengganti yang mengisi.
+  const pengganti = document.getElementById('modePengganti').checked;
+  const list = (gid && !pengganti) ? kelasData.filter(k => k.guru_id === gid)
+    : [...kelasData].sort((a, b) => (a.nama_murid || '').localeCompare(b.nama_murid || '', 'id'));
+  const showGuruName = !gid || pengganti;
   sel.innerHTML = '<option value="">Pilih Murid / Kelas...</option>' +
-    list.map(k => `<option value="${k.id}">${k.nama_murid} · ${k.program} (${k.tipe})${gid ? '' : ' — ' + (k.nama_guru || '')}</option>`).join('');
+    list.map(k => `<option value="${k.id}">${k.nama_murid} · ${k.program} (${k.tipe})${showGuruName ? ' — ' + (k.nama_guru || '') : ''}</option>`).join('');
   document.getElementById('kuotaPill').style.display = 'none';
   document.getElementById('historyCard').style.display = 'none';
   updateWA();
@@ -559,6 +614,7 @@ function resetForm() {
     e.textContent = i + 1;
   });
   document.getElementById('sl1').className = 'step-line';
+  if (currentGuru) document.getElementById('guruSelect').disabled = true; // tetap terkunci ke guru yg login
   updateWA();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -570,6 +626,88 @@ function showToast(msg, type = '') {
   t.textContent = msg; t.className = 'show ' + (type || '');
   setTimeout(() => t.className = '', 3500);
 }
+
+// ── TAB ─────────────────────────────────────────────────────
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'jadwal') gLoadTt();
+}
+
+// ── JADWAL SAYA ─────────────────────────────────────────────
+let gTtWeek = JADWAL.weekStart(new Date()), gTtLap = {}, gTtEvents = [], gMissEvents = [];
+function gTtGo(n) {
+  if (n === 0) gTtWeek = JADWAL.weekStart(new Date());
+  else { const d = new Date(gTtWeek); d.setDate(d.getDate() + 7 * n); gTtWeek = d; }
+  gLoadTt();
+}
+async function gLoadTt() {
+  if (!currentGuru) return;
+  if (window.innerWidth < 760 && !document.getElementById('gTtHari').dataset.init) {
+    document.getElementById('gTtHari').value = String(new Date().getDay() || 7);
+    document.getElementById('gTtHari').dataset.init = 1;
+  }
+  const dates = JADWAL.weekDates(gTtWeek);
+  const o = { day: 'numeric', month: 'short' };
+  document.getElementById('gTtRange').textContent =
+    dates[0].toLocaleDateString('id-ID', o) + ' – ' + dates[6].toLocaleDateString('id-ID', { ...o, year: 'numeric' });
+  document.getElementById('gTtGrid').innerHTML = '<div class="empty-state">⏳ Memuat jadwal...</div>';
+  // ambil laporan 2 minggu terakhir + minggu yg dilihat (untuk daftar "belum diisi")
+  const back = new Date(); back.setDate(back.getDate() - 14);
+  const dari = JADWAL.ymd(back < dates[0] ? back : dates[0]);
+  const sampai = JADWAL.ymd(dates[6] > new Date() ? dates[6] : new Date());
+  gTtLap = {};
+  try {
+    const lap = await API.getLaporan({ dari, sampai });
+    lap.forEach(l => { const k = l.kelas_id + '|' + l.tanggal; (gTtLap[k] = gTtLap[k] || []).push(l); });
+  } catch (e) { showToast('Gagal memuat laporan: ' + e.message, 'error'); }
+  gRenderTt();
+}
+function myKelas() { return kelasData.filter(k => currentGuru && k.guru_id === currentGuru.id); }
+function gRenderTt() {
+  const hari = document.getElementById('gTtHari').value;
+  gTtEvents = JADWAL.occurrences(myKelas(), gTtWeek, gTtLap);
+  JADWAL.render({
+    container: document.getElementById('gTtGrid'), ws: gTtWeek, events: gTtEvents,
+    days: hari ? [+hari] : undefined, showGuru: false, onClick: gOpenEvent,
+  });
+  const sc = document.querySelector('#gTtGrid .tt-scroll');
+  if (sc) sc.scrollTop = Math.max(0, (Math.min(new Date().getHours(), 14) - 8) * 56);
+  // daftar belum diisi: minggu lalu + minggu ini (s/d hari ini)
+  const wsNow = JADWAL.weekStart(new Date()), wsPrev = new Date(wsNow); wsPrev.setDate(wsPrev.getDate() - 7);
+  gMissEvents = [...JADWAL.occurrences(myKelas(), wsPrev, gTtLap), ...JADWAL.occurrences(myKelas(), wsNow, gTtLap)]
+    .filter(e => e.status === 'missing' || e.status === 'today')
+    .sort((a, b) => a.date.localeCompare(b.date) || a.start - b.start);
+  document.getElementById('gMissing').innerHTML = gMissEvents.length
+    ? gMissEvents.map((e, i) => `<div class="miss-item" onclick="gFillFromMiss(${i})">
+        ${e.status === 'today' ? '⏳' : '⚠️'} ${JADWAL.HARI[e.d]} ${LU.fmtDateDDMM(e.date).slice(0, 5)} · ${e.slot.t} — <strong>${e.k.nama_murid}</strong>
+        <span style="color:var(--muted)">${e.k.program}</span> <span style="float:right;color:var(--blue-ink)">isi →</span></div>`).join('')
+    : '<div class="empty-state">Semua laporan sudah lengkap, terima kasih! ✦</div>';
+}
+function gFillFromMiss(i) { const e = gMissEvents[i]; if (e) gGoFillReport(e); }
+function gOpenEvent(e) {
+  if (e.status === 'done') {
+    const l = e.lap[0];
+    showToast(`✅ Laporan ${e.k.nama_murid} tgl ${LU.fmtDateDDMM(e.date)} sudah masuk` + (l && l.status === 'pending' ? ' (menunggu admin)' : ''), 'success');
+    return;
+  }
+  if (e.status === 'future') { showToast(`📅 ${e.k.nama_murid} · ${JADWAL.HARI[e.d]} ${e.slot.t} (${e.slot.dur} mnt)`); return; }
+  gGoFillReport(e);
+}
+function gGoFillReport(e) {
+  if (document.getElementById('step2Btns').style.display === 'block') resetForm();
+  document.getElementById('modePengganti').checked = false;
+  onGuruChange();
+  document.getElementById('kelasSelect').value = e.k.id;
+  document.getElementById('tglSesi').value = e.date;
+  onKelasChange();
+  showTab('laporan', document.querySelectorAll('.tab-btn')[0]);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast(`Isi laporan ${e.k.nama_murid} · ${LU.fmtDateDDMM(e.date)} ✏️`);
+}
 </script>
+<script src="app-shell.js"></script>
 </body>
 </html>
