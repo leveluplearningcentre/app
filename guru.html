@@ -296,7 +296,7 @@ main{max-width:680px;margin:0 auto;padding:8px 16px 48px}
       </select>
     </div>
     <div id="gTtGrid"><div class="empty-state">Login dulu untuk melihat jadwal ✦</div></div>
-    <div class="tt-legend"><span>✅ laporan masuk</span><span>⚠️ belum ada laporan</span><span>⏳ hari ini</span></div>
+    <div class="tt-legend"><span>✅ laporan masuk</span><span>⚠️ belum ada laporan</span><span>⏳ hari ini</span><span>🙅 izin</span></div>
     <div style="font-size:12px;color:var(--muted);font-weight:700;margin-top:6px">Tap jadwal yang belum ada laporannya → langsung ke form laporan ✦ · Jadwal diatur oleh admin</div>
   </div>
  </div>
@@ -637,7 +637,7 @@ function showTab(name, btn) {
 }
 
 // ── JADWAL SAYA ─────────────────────────────────────────────
-let gTtWeek = JADWAL.weekStart(new Date()), gTtLap = {}, gTtEvents = [], gMissEvents = [];
+let gTtWeek = JADWAL.weekStart(new Date()), gTtLap = {}, gTtAbs = {}, gTtEvents = [], gMissEvents = [];
 function gTtGo(n) {
   if (n === 0) gTtWeek = JADWAL.weekStart(new Date());
   else { const d = new Date(gTtWeek); d.setDate(d.getDate() + 7 * n); gTtWeek = d; }
@@ -658,17 +658,18 @@ async function gLoadTt() {
   const back = new Date(); back.setDate(back.getDate() - 14);
   const dari = JADWAL.ymd(back < dates[0] ? back : dates[0]);
   const sampai = JADWAL.ymd(dates[6] > new Date() ? dates[6] : new Date());
-  gTtLap = {};
+  gTtLap = {}; gTtAbs = {};
   try {
-    const lap = await API.getLaporan({ dari, sampai });
+    const [lap, abs] = await Promise.all([API.getLaporan({ dari, sampai }), API.getAbsensi({ dari, sampai })]);
     lap.forEach(l => { const k = l.kelas_id + '|' + l.tanggal; (gTtLap[k] = gTtLap[k] || []).push(l); });
+    abs.forEach(a => { gTtAbs[a.kelas_id + '|' + a.tanggal] = a; });
   } catch (e) { showToast('Gagal memuat laporan: ' + e.message, 'error'); }
   gRenderTt();
 }
 function myKelas() { return kelasData.filter(k => currentGuru && k.guru_id === currentGuru.id); }
 function gRenderTt() {
   const hari = document.getElementById('gTtHari').value;
-  gTtEvents = JADWAL.occurrences(myKelas(), gTtWeek, gTtLap);
+  gTtEvents = JADWAL.occurrences(myKelas(), gTtWeek, gTtLap, undefined, gTtAbs);
   JADWAL.render({
     container: document.getElementById('gTtGrid'), ws: gTtWeek, events: gTtEvents,
     days: hari ? [+hari] : undefined, showGuru: false, onClick: gOpenEvent,
@@ -677,17 +678,34 @@ function gRenderTt() {
   if (sc) sc.scrollTop = Math.max(0, (Math.min(new Date().getHours(), 14) - 8) * 56);
   // daftar belum diisi: minggu lalu + minggu ini (s/d hari ini)
   const wsNow = JADWAL.weekStart(new Date()), wsPrev = new Date(wsNow); wsPrev.setDate(wsPrev.getDate() - 7);
-  gMissEvents = [...JADWAL.occurrences(myKelas(), wsPrev, gTtLap), ...JADWAL.occurrences(myKelas(), wsNow, gTtLap)]
+  gMissEvents = [...JADWAL.occurrences(myKelas(), wsPrev, gTtLap, undefined, gTtAbs), ...JADWAL.occurrences(myKelas(), wsNow, gTtLap, undefined, gTtAbs)]
     .filter(e => e.status === 'missing' || e.status === 'today')
     .sort((a, b) => a.date.localeCompare(b.date) || a.start - b.start);
   document.getElementById('gMissing').innerHTML = gMissEvents.length
-    ? gMissEvents.map((e, i) => `<div class="miss-item" onclick="gFillFromMiss(${i})">
-        ${e.status === 'today' ? '⏳' : '⚠️'} ${JADWAL.HARI[e.d]} ${LU.fmtDateDDMM(e.date).slice(0, 5)} · ${e.slot.t} — <strong>${e.k.nama_murid}</strong>
-        <span style="color:var(--muted)">${e.k.program}</span> <span style="float:right;color:var(--blue-ink)">isi →</span></div>`).join('')
+    ? gMissEvents.map((e, i) => `<div class="miss-item" style="display:flex;align-items:center;gap:8px;cursor:default">
+        <span style="flex:1;cursor:pointer" onclick="gFillFromMiss(${i})">${e.status === 'today' ? '⏳' : '⚠️'} ${JADWAL.HARI[e.d]} ${LU.fmtDateDDMM(e.date).slice(0, 5)} · ${e.slot.t} — <strong>${e.k.nama_murid}</strong>
+        <span style="color:var(--muted)">${e.k.program}</span></span>
+        <button class="btn btn-ghost" style="padding:5px 9px;font-size:12px" onclick="gIzin(${i})">🙅 Izin</button>
+        <button class="btn btn-blue" style="padding:5px 10px;font-size:12px" onclick="gFillFromMiss(${i})">Isi →</button></div>`).join('')
     : '<div class="empty-state">Semua laporan sudah lengkap, terima kasih! ✦</div>';
+}
+async function gIzin(i) {
+  const e = gMissEvents[i]; if (!e) return;
+  if (!confirm(`${e.k.nama_murid} tidak masuk (izin) tgl ${LU.fmtDateDDMM(e.date)}?`)) return;
+  try {
+    await API.upsertAbsensi({ kelas_id: e.k.id, murid_id: e.k.murid_id, nama: e.k.nama_murid, tanggal: e.date, status: 'izin', catatan: 'dari guru: ' + (currentGuru ? currentGuru.nama : '') });
+    showToast('Ditandai izin ✦', 'success');
+    gLoadTt();
+  } catch (err) { showToast('Gagal: ' + err.message, 'error'); }
 }
 function gFillFromMiss(i) { const e = gMissEvents[i]; if (e) gGoFillReport(e); }
 function gOpenEvent(e) {
+  const mem = e.members || [e];
+  if (mem.length > 1) {                 // semi private: isi yg belum dulu
+    const next = mem.find(m => m.status === 'missing' || m.status === 'today');
+    if (next) { gGoFillReport(next); return; }
+  }
+  if (e.status === 'izin') { showToast(`🙅 ${e.k.nama_murid} izin tgl ${LU.fmtDateDDMM(e.date)}`); return; }
   if (e.status === 'done') {
     const l = e.lap[0];
     showToast(`✅ Laporan ${e.k.nama_murid} tgl ${LU.fmtDateDDMM(e.date)} sudah masuk` + (l && l.status === 'pending' ? ' (menunggu admin)' : ''), 'success');

@@ -271,7 +271,7 @@ tr:hover td{background:#FFFAF8}
       </div>
       <div id="ttGrid"><div class="empty"><span class="spinner"></span></div></div>
       <div class="tt-legend">
-        <span>✅ laporan masuk</span><span>⚠️ belum ada laporan</span><span>⏳ hari ini</span><span>🔄 diajar guru pengganti</span>
+        <span>✅ laporan masuk</span><span>⚠️ belum ada laporan</span><span>⏳ hari ini</span><span>🙅 murid izin/libur</span><span>👥 semi private (digabung)</span><span>🔄 guru pengganti</span>
       </div>
       <div style="font-size:12px;color:var(--muted);font-weight:700;margin-top:6px">Klik kotak kosong → tambah jadwal · Geser kotak (di HP: tekan-tahan dulu) → pindah jadwal mingguan · Klik kotak → detail &amp; edit</div>
     </div>
@@ -879,7 +879,7 @@ async function hapusKelas(id){
 }
 
 // ── JADWAL / TIME TABLE ─────────────────────────────────────
-let ttWeek = JADWAL.weekStart(new Date()), ttLapIdx = {}, ttEvents = [];
+let ttWeek = JADWAL.weekStart(new Date()), ttLapIdx = {}, ttAbsIdx = {}, ttEvents = [];
 const WEB_URL = 'https://leveluplearningcenter.netlify.app';
 
 function initJadwal(){
@@ -903,18 +903,19 @@ async function loadTimetable(){
   document.getElementById('ttRange').textContent =
     dates[0].toLocaleDateString('id-ID',o) + ' – ' + dates[6].toLocaleDateString('id-ID',{...o, year:'numeric'});
   document.getElementById('ttGrid').innerHTML = '<div class="empty"><span class="spinner"></span></div>';
-  ttLapIdx = {};
+  ttLapIdx = {}; ttAbsIdx = {};
   try{
-    const lap = await API.getLaporan({dari, sampai});
+    const [lap, abs] = await Promise.all([ API.getLaporan({dari, sampai}), API.getAbsensi({dari, sampai}) ]);
     lap.forEach(l=>{ const k = l.kelas_id+'|'+l.tanggal; (ttLapIdx[k] = ttLapIdx[k] || []).push(l); });
-  }catch(e){ showToast('Laporan gagal dimuat: '+e.message,'error'); }
+    abs.forEach(a=>{ ttAbsIdx[a.kelas_id+'|'+a.tanggal] = a; });
+  }catch(e){ showToast('Data gagal dimuat: '+e.message,'error'); }
   renderTimetable();
 }
 function renderTimetable(){
   const gid = document.getElementById('ttGuru').value;
   const hari = document.getElementById('ttHari').value;
   const kls = gid ? kelasData.filter(k=>k.guru_id===gid) : kelasData;
-  ttEvents = JADWAL.occurrences(kls, ttWeek, ttLapIdx);
+  ttEvents = JADWAL.occurrences(kls, ttWeek, ttLapIdx, undefined, ttAbsIdx);
   JADWAL.render({
     container: document.getElementById('ttGrid'), ws: ttWeek, events: ttEvents,
     days: hari ? [+hari] : undefined, showGuru: !gid, draggable: true,
@@ -982,27 +983,51 @@ function ttShowEventKey(kid, date, t){
   const e = ttEvents.find(x=>x.k.id===kid && x.date===date && x.slot.t===t); if(e) ttShowEvent(e);
 }
 function ttShowEvent(e){
-  const k = e.k, s = sesiData.find(x=>x.kelas_id===k.id);
-  const st = { done:'✅ Laporan sudah masuk', missing:'⚠️ Belum ada laporan', today:'⏳ Hari ini — belum ada laporan', future:'📅 Akan datang' }[e.status];
+  const mem = e.members || [e];
+  const k0 = mem[0].k;
   const tgl = new Date(e.date+'T00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const ST = { done:'✅ Laporan sudah masuk', missing:'⚠️ Belum ada laporan', today:'⏳ Hari ini — belum ada laporan', future:'📅 Akan datang', izin:'🙅 Izin / tidak masuk' };
+  const block = m => {
+    const k = m.k, s = sesiData.find(x=>x.kelas_id===k.id);
+    const canIzin = m.status!=='done';
+    return `<div style="border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;margin-top:10px">
+      <div style="font-weight:900;font-size:15px">${k.nama_murid} <span style="font-size:11px;color:var(--muted)">${k.tipe}</span></div>
+      <div style="font-size:13px;font-weight:700;line-height:1.8">
+        🗓️ ${k.jadwal||JADWAL.format(JADWAL.slotsOf(k))||'—'}
+        ${s?` · 📊 <span class="kuota-badge ${s.sesi>=s.kuota?'kuota-full':'kuota-ok'}">${s.sesi} / ${s.kuota}</span>`:''}<br>
+        <span style="color:${m.status==='missing'?'#C0564F':'inherit'}">${ST[m.status]}${m.status==='izin'&&m.absen?.status!=='izin'?' ('+m.absen.status+')':''}</span>
+        ${m.pengganti?`<br>🔄 Diajar guru pengganti: <strong>${m.pengganti.nama_guru||'—'}</strong>`:''}
+      </div>
+      ${m.lap.map(l=>`<div style="margin-top:8px;background:var(--mint-soft);border-radius:12px;padding:10px 12px;font-size:12.5px;font-weight:600">
+        ${LU.parseMateri(l.materi_json).map(x=>`• ${x.m} <span class="stars">${LU.stars(x.s)}</span>`).join('<br>')||'—'}
+        ${l.catatan?`<div style="margin-top:6px"><strong>Note:</strong> ${l.catatan}</div>`:''}
+        <div style="margin-top:4px;color:var(--muted)">${l.nama_guru||''} · ${l.status==='pending'?'⏳ pending':'✅ approved'}</div></div>`).join('')}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+        ${canIzin ? (m.status==='izin'
+          ? `<button class="btn btn-ghost btn-sm" onclick="ttSetIzin('${k.id}','${e.date}',null)">↩️ Batalkan izin</button>`
+          : `<button class="btn btn-ghost btn-sm" onclick="ttSetIzin('${k.id}','${e.date}','izin')">🙅 Izin</button>
+             <button class="btn btn-ghost btn-sm" onclick="ttSetIzin('${k.id}','${e.date}','sakit')">🤒 Sakit</button>
+             <button class="btn btn-ghost btn-sm" onclick="ttSetIzin('${k.id}','${e.date}','libur')">🏖️ Libur</button>`) : ''}
+        <button class="btn btn-blue btn-sm" onclick="ttEditKelas('${k.id}')">✏️ Edit kelas</button>
+        <button class="btn btn-ghost btn-sm" onclick="ttDeleteSlot('${k.id}',${m.slot.d},'${m.slot.t}')">🗑️ Hapus jadwal ${JADWAL.HARI[m.slot.d]} ${m.slot.t}</button>
+      </div>
+    </div>`;
+  };
   ttModal(`
-    <div class="card-title">${progBadge(k.program)} ${k.nama_murid}</div>
-    <div style="font-size:13.5px;font-weight:700;line-height:1.9">
-      📅 ${tgl} · <strong>${e.slot.t}</strong> (${e.slot.dur} mnt)<br>
-      👩‍🏫 ${k.nama_guru||'—'} · ${k.tipe}<br>
-      🗓️ Jadwal mingguan: ${k.jadwal||JADWAL.format(JADWAL.slotsOf(k))||'—'}<br>
-      ${s?`📊 Sesi: <span class="kuota-badge ${s.sesi>=s.kuota?'kuota-full':'kuota-ok'}">${s.sesi} / ${s.kuota}</span><br>`:''}
-      <span style="color:${e.status==='missing'?'#C0564F':'inherit'}">${st}</span>
-      ${e.pengganti?`<br>🔄 Diajar guru pengganti: <strong>${e.pengganti.nama_guru||'—'}</strong>`:''}
-    </div>
-    ${e.lap.map(l=>`<div style="margin-top:10px;background:var(--mint-soft);border-radius:12px;padding:10px 12px;font-size:12.5px;font-weight:600">
-      ${LU.parseMateri(l.materi_json).map(x=>`• ${x.m} <span class="stars">${LU.stars(x.s)}</span>`).join('<br>')||'—'}
-      ${l.catatan?`<div style="margin-top:6px"><strong>Note:</strong> ${l.catatan}</div>`:''}
-      <div style="margin-top:4px;color:var(--muted)">${l.nama_guru||''} · ${l.status==='pending'?'⏳ pending':'✅ approved'}</div></div>`).join('')}
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
-      <button class="btn btn-primary btn-sm" onclick="ttEditKelas('${k.id}')">✏️ Edit kelas &amp; jadwal</button>
-      <button class="btn btn-ghost btn-sm" onclick="ttDeleteSlot('${k.id}',${e.slot.d},'${e.slot.t}')">🗑️ Hapus jadwal ${JADWAL.HARI[e.slot.d]} ${e.slot.t}</button>
-    </div>`);
+    <div class="card-title">${progBadge(k0.program)} ${mem.length>1?`👥 ${mem.length} murid`:k0.nama_murid}</div>
+    <div style="font-size:13.5px;font-weight:700;line-height:1.8">📅 ${tgl} · <strong>${e.slot.t}</strong> (${e.slot.dur} mnt)<br>👩‍🏫 ${k0.nama_guru||'—'}</div>
+    ${mem.map(block).join('')}
+    <div style="font-size:11.5px;color:var(--muted);font-weight:700;margin-top:10px">Izin/sakit/libur: tidak muncul di reminder &amp; tidak menambah sesi.</div>`);
+}
+async function ttSetIzin(kid, date, status){
+  const k = kelasData.find(x=>x.id===kid); if(!k) return;
+  try{
+    if(status) await API.upsertAbsensi({ kelas_id:kid, murid_id:k.murid_id, nama:k.nama_murid, tanggal:date, status, catatan:'dari time table' });
+    else await API.deleteAbsensi(kid, date);
+    ttCloseModal();
+    showToast(status ? `${k.nama_murid} ditandai ${status} ✦` : 'Izin dibatalkan', 'success');
+    await loadTimetable();
+  }catch(err){ showToast('Gagal: '+err.message,'error'); }
 }
 function ttAddSlotAt(d, date, time){
   const gid = document.getElementById('ttGuru').value;
@@ -1031,20 +1056,24 @@ async function ttSaveNewSlot(){
   await ttSaveSlots(k, [...JADWAL.slotsOf(k).filter(s=>!(s.d===slot.d && s.t===slot.t)), slot]);
 }
 async function ttMoveSlot(e, newD, newT){
-  const k = e.k;
-  if(!confirm(`Pindah jadwal ${k.nama_murid} (${k.program})\n${JADWAL.HARI[e.slot.d]} ${e.slot.t} → ${JADWAL.HARI[newD]} ${newT}?\n\nBerlaku untuk jadwal mingguan.`)) { renderTimetable(); return; }
-  const slots = JADWAL.slotsOf(k).map(s => (s.d===e.slot.d && s.t===e.slot.t) ? { ...s, d:newD, t:newT } : s);
-  await ttSaveSlots(k, slots);
+  const mem = e.members || [e];
+  const nama = mem.map(m=>m.k.nama_murid).join(', ');
+  if(!confirm(`Pindah jadwal ${nama} (${e.k.program})\n${JADWAL.HARI[e.slot.d]} ${e.slot.t} → ${JADWAL.HARI[newD]} ${newT}?\n\nBerlaku untuk jadwal mingguan.`)) { renderTimetable(); return; }
+  for(const m of mem){
+    const slots = JADWAL.slotsOf(m.k).map(s => (s.d===m.slot.d && s.t===m.slot.t) ? { ...s, d:newD, t:newT } : s);
+    await ttSaveSlots(m.k, slots, m !== mem[mem.length-1]);
+  }
 }
 async function ttDeleteSlot(kid, d, t){
   const k = kelasData.find(x=>x.id===kid); if(!k) return;
   if(!confirm(`Hapus jadwal ${JADWAL.HARI[d]} ${t} untuk ${k.nama_murid}?`)) return;
   await ttSaveSlots(k, JADWAL.slotsOf(k).filter(s=>!(s.d===d && s.t===t)));
 }
-async function ttSaveSlots(k, slots){
+async function ttSaveSlots(k, slots, quiet){
   slots.sort((a,b)=>a.d-b.d || a.t.localeCompare(b.t));
   try{
     await API.updateKelas({ id:k.id, jadwal_slots:slots, jadwal:JADWAL.format(slots) });
+    if(quiet) return;
     ttCloseModal();
     showToast('Jadwal tersimpan ✦','success');
     await refreshBaseData();

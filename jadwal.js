@@ -75,7 +75,9 @@ const JADWAL = (() => {
 
   // ── Kejadian kelas dalam satu minggu ───────────────────────
   // laporanIdx: { "kelasId|YYYY-MM-DD": [laporan,...] }
-  function occurrences(kelasList, ws, laporanIdx = {}, today = ymd(new Date())) {
+  // absenIdx: { "kelasId|YYYY-MM-DD": absensi } → status izin/sakit/libur = tidak perlu laporan
+  const IZIN = ['izin', 'sakit', 'libur', 'alpha'];
+  function occurrences(kelasList, ws, laporanIdx = {}, today = ymd(new Date()), absenIdx = {}) {
     const out = [], seen = new Set();
     const dates = weekDates(ws);
     // kelas dgn term lebih baru diproses dulu supaya duplikat antar-term terbuang
@@ -91,11 +93,35 @@ const JADWAL = (() => {
         seen.add(key);
         const lap = laporanIdx[k.id + '|' + date] || [];
         const pengganti = lap.find(l => l.guru_id && l.guru_id !== k.guru_id);
-        const status = lap.length ? 'done' : (date < today ? 'missing' : date === today ? 'today' : 'future');
-        out.push({ k, slot: s, date, d: s.d, start: toMin(s.t), end: toMin(s.t) + (s.dur || DEFAULT_DUR), lap, pengganti, status });
+        const absen = absenIdx[k.id + '|' + date] || null;
+        const izin = !lap.length && absen && IZIN.includes(absen.status);
+        const status = lap.length ? 'done' : izin ? 'izin' : (date < today ? 'missing' : date === today ? 'today' : 'future');
+        out.push({ k, slot: s, date, d: s.d, start: toMin(s.t), end: toMin(s.t) + (s.dur || DEFAULT_DUR), lap, pengganti, status, absen });
       }
     }
     return out;
+  }
+
+  // Gabung kelas dgn guru + program + jam yang sama (mis. Semi Private) jadi satu kotak
+  const STATUS_RANK = { missing: 0, today: 1, future: 2, izin: 3, done: 3 };
+  function groupEvents(evs) {
+    const map = new Map();
+    evs.forEach(e => {
+      const key = [e.date, e.start, e.k.guru_id || e.k.nama_guru, e.k.program].join('|');
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(e);
+    });
+    return [...map.values()].map(list => {
+      if (list.length === 1) return list[0];
+      list.sort((a, b) => (a.k.nama_murid || '').localeCompare(b.k.nama_murid || ''));
+      const worst = list.reduce((w, e) => STATUS_RANK[e.status] < STATUS_RANK[w.status] ? e : w, list[0]);
+      return {
+        ...list[0], members: list,
+        end: Math.max(...list.map(e => e.end)),
+        status: worst.status,
+        pengganti: list.find(e => e.pengganti)?.pengganti || null,
+      };
+    });
   }
 
   // Bagi kolom kalau ada jadwal yang bentrok jam
@@ -124,12 +150,13 @@ const JADWAL = (() => {
     Tutor: ['#EAF3FB', '#5E87B8', '#A7C7E7'], Swim: ['#EAF8F0', '#3E8A65', '#BFE6D2'],
     Art: ['#FFF6E3', '#B98A2E', '#FFE3A3'], Mandarin: ['#F4EEFB', '#8A6FB5', '#D9C7F0'],
   };
-  const STATUS_ICON = { done: '✅', missing: '⚠️', today: '⏳', future: '' };
+  const STATUS_ICON = { done: '✅', missing: '⚠️', today: '⏳', future: '', izin: '🙅' };
 
   // ── Render grid mingguan ───────────────────────────────────
   // opts: { container, ws, events, days:[1..7], showGuru, onClick(ev), onEmpty(d,date,time), onMove(ev,d,time), draggable }
   function render(opts) {
-    const { container, ws, events, showGuru = true } = opts;
+    const { container, ws, showGuru = true } = opts;
+    const events = groupEvents(opts.events);
     const days = opts.days || [1, 2, 3, 4, 5, 6, 7];
     const dates = weekDates(ws);
     const today = ymd(new Date());
@@ -158,11 +185,15 @@ const JADWAL = (() => {
               const ht = Math.max(22, (e.end - e.start) / 60 * PX_PER_H - 2);
               const w = 100 / e.lanes;
               const idx = events.indexOf(e);
-              return `<div class="tt-ev st-${e.status}" data-i="${idx}"
+              const mem = e.members || [e];
+              const names = mem.map(m => m.k.nama_murid);
+              return `<div class="tt-ev st-${e.status}${mem.length > 1 ? ' tt-group' : ''}" data-i="${idx}"
                 style="top:${top}px;height:${ht}px;left:calc(${w * e.lane}% + 2px);width:calc(${w}% - 4px);background:${bg};color:${ink};border-color:${bd}"
-                title="${e.k.nama_murid} · ${e.k.program} (${e.k.tipe}) · ${e.k.nama_guru || ''} · ${e.slot.t}">
-                <div class="tt-ev-t">${e.slot.t} ${STATUS_ICON[e.status]}</div>
-                <div class="tt-ev-n">${e.k.nama_murid}</div>
+                title="${names.join(', ')} · ${e.k.program} (${e.k.tipe}) · ${e.k.nama_guru || ''} · ${e.slot.t}">
+                <div class="tt-ev-t">${e.slot.t} ${STATUS_ICON[e.status]}${mem.length > 1 ? ` <span class="tt-cnt">👥${mem.length}</span>` : ''}</div>
+                ${mem.length > 1
+                  ? mem.map(m => `<div class="tt-ev-n tt-ev-m">${STATUS_ICON[m.status] ? `<span class="tt-mi">${STATUS_ICON[m.status]}</span>` : ''}${m.k.nama_murid}</div>`).join('')
+                  : `<div class="tt-ev-n">${e.k.nama_murid}</div>`}
                 ${showGuru ? `<div class="tt-ev-g">${e.pengganti ? '🔄 ' + (e.pengganti.nama_guru || 'pengganti') : (e.k.nama_guru || '')}</div>` : ''}
               </div>`;
             }).join('')}
@@ -264,8 +295,13 @@ const JADWAL = (() => {
   .tt-ev-t{font-weight:900;font-size:10.5px;opacity:.85}
   .tt-ev-n{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tt-ev-g{font-weight:700;font-size:10px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tt-ev-m{font-size:10.5px;line-height:1.3}
+  .tt-mi{font-size:9px;margin-right:2px}
+  .tt-cnt{font-size:9.5px;font-weight:900;background:rgba(255,255,255,.7);border-radius:999px;padding:0 5px;margin-left:2px}
+  .tt-ev.tt-group:hover{overflow:visible;height:auto!important;min-height:fit-content;z-index:20}
   .tt-ev.st-missing{border-color:#E87979!important;border-style:dashed;box-shadow:0 0 0 2px rgba(232,121,121,.18)}
   .tt-ev.st-done{opacity:.78}
+  .tt-ev.st-izin{opacity:.5;border-style:dashed;background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(154,147,168,.12) 6px 12px)!important}
   .tt-ev.tt-armed{box-shadow:0 0 0 3px #E891A5}
   .tt-ev.tt-drag{z-index:50;opacity:.9;box-shadow:0 10px 24px rgba(68,62,82,.3);cursor:grabbing;transition:none}
   body.tt-dragging{user-select:none;-webkit-user-select:none}
@@ -276,5 +312,5 @@ const JADWAL = (() => {
     document.head.appendChild(st);
   }
 
-  return { HARI, HARI_EN, parse, format, slotsOf, weekStart, weekDates, occurrences, render, ymd, toMin, fromMin, DEFAULT_DUR };
+  return { IZIN, HARI, HARI_EN, parse, format, slotsOf, weekStart, weekDates, occurrences, groupEvents, render, ymd, toMin, fromMin, DEFAULT_DUR };
 })();
