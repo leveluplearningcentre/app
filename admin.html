@@ -231,7 +231,7 @@ tr:hover td{background:#FFFAF8}
             <option>P5</option><option>P6</option><option>P7</option><option>P8</option>
             <option>P9</option><option>P10</option><option>P11</option><option>P12</option>
           </datalist></div>
-        <div class="form-field"><label>Kelas Sekolah</label><input id="mKelasSekolah" placeholder="cth: K2 Playfield"></div>
+        <div class="form-field"><label>Sekolah</label><input id="mKelasSekolah" placeholder="cth: Playfield"></div>
         <div class="form-field"><label>Rate Invoice /sesi (Rp)</label><input id="mRate" type="number" placeholder="200000"></div>
         <div class="form-field"><label>WA Ortu</label><input id="mWaOrtu" placeholder="08..."></div>
         <div class="form-field"><label>WA Laporan</label><input id="mWaLaporan" placeholder="08... (opsional)"></div>
@@ -291,8 +291,16 @@ tr:hover td{background:#FFFAF8}
     <div class="card">
       <div class="card-title">📝 Laporan Harian Guru <span class="badge bg-yellow" id="pendingBadge" style="display:none"></span></div>
       <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:10px">Laporan dari guru masuk berstatus <strong>⏳ pending</strong> — cek typo &amp; bahasa (✏️), lalu ✅ approve, baru 💬 kirim ke ortu. Laporan pending tidak tampil di portal ortu &amp; report PDF.</div>
-      <div class="form-grid" style="grid-template-columns:160px 170px 170px 150px 180px auto">
-        <div class="form-field"><label>Bulan</label><input type="month" id="lapBulan"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn btn-ghost btn-sm lap-quick" data-q="hari" onclick="lapQuick('hari')">Hari ini</button>
+        <button class="btn btn-ghost btn-sm lap-quick" data-q="kemarin" onclick="lapQuick('kemarin')">Kemarin</button>
+        <button class="btn btn-ghost btn-sm lap-quick" data-q="minggu" onclick="lapQuick('minggu')">Minggu ini</button>
+        <button class="btn btn-ghost btn-sm lap-quick" data-q="bulan" onclick="lapQuick('bulan')">Bulan ini</button>
+        <button class="btn btn-ghost btn-sm lap-quick" data-q="bulanlalu" onclick="lapQuick('bulanlalu')">Bulan lalu</button>
+      </div>
+      <div class="form-grid" style="grid-template-columns:150px 150px 170px 170px 140px 170px auto">
+        <div class="form-field"><label>Dari</label><input type="date" id="lapDari" onchange="lapMarkQuick()"></div>
+        <div class="form-field"><label>Sampai</label><input type="date" id="lapSampai" onchange="lapMarkQuick()"></div>
         <div class="form-field"><label>Guru</label><select id="lapGuru"><option value="">Semua guru</option></select></div>
         <div class="form-field"><label>Murid</label><select id="lapMurid"><option value="">Semua murid</option></select></div>
         <div class="form-field"><label>Status</label>
@@ -303,6 +311,7 @@ tr:hover td{background:#FFFAF8}
           <button class="btn btn-blue" onclick="loadLaporan()">🔍 Filter</button>
         </div>
       </div>
+      <div id="lapSummary" style="display:none;margin-bottom:12px"></div>
       <div class="table-wrap">
         <table><thead><tr><th>Tanggal</th><th>Murid</th><th>Guru</th><th>Program</th><th>Materi</th><th>Status</th><th>Aksi</th></tr></thead>
         <tbody id="laporanTbody"><tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr></tbody></table>
@@ -556,7 +565,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ── INIT ────────────────────────────────────────────────────
 async function startApp(){
   if(appStarted) return; appStarted = true;
-  document.getElementById('lapBulan').value = todayYM;
+  lapQuick('bulan', true);
   document.getElementById('invBulan').value = todayYM;
   document.getElementById('invFilterBulan').value = todayYM;
   document.getElementById('feeBulan').value = todayYM;
@@ -955,9 +964,9 @@ function ttRemindGuru(gid){
   const evs = ttEvents.filter(e=>(e.status==='missing'||e.status==='today') && e.k.guru_id===gid)
     .sort((a,b)=>a.date.localeCompare(b.date) || a.start-b.start);
   const list = evs.map(e=>`• ${JADWAL.HARI[e.d]} ${LU.fmtDateDDMM(e.date).slice(0,5)} ${e.slot.t} – ${e.k.nama_murid} (${e.k.program})`).join('\n');
-  const txt = `Halo ${g.nama} ✦\n\nAda laporan harian yang belum diisi:\n${list}\n\nMohon diisi di portal guru ya 🙏\n${WEB_URL}/guru.html`;
+  const txt = `Halo ${g.nama} ✦\n\nAda laporan harian yang belum diisi:\n${list}\n\nMohon diisi di portal guru ya, terima kasih ✦\n${WEB_URL}/guru.html`;
   let wa = String(g.wa||'').replace(/\D/g,''); if(wa.startsWith('0')) wa = '62'+wa.slice(1);
-  window.open(`https://wa.me/${wa}?text=${encodeURIComponent(txt)}`, '_blank');
+  window.open(LU.waLink(wa, txt), '_blank');
 }
 function renderTtNoSlot(){
   const today = JADWAL.ymd(new Date());
@@ -1089,7 +1098,8 @@ async function loadLaporan(){
   const tbody=document.getElementById('laporanTbody');
   tbody.innerHTML='<tr><td colspan="7" class="empty"><span class="spinner"></span></td></tr>';
   const opts={};
-  const bln=document.getElementById('lapBulan').value; if(bln) opts.bulan=bln;
+  const dari=document.getElementById('lapDari').value, sampai=document.getElementById('lapSampai').value;
+  if(dari) opts.dari=dari; if(sampai) opts.sampai=sampai;
   const g=document.getElementById('lapGuru').value; if(g) opts.guru_id=g;
   const m=document.getElementById('lapMurid').value; if(m) opts.murid_id=m;
   const st=document.getElementById('lapStatus').value; if(st) opts.status=st;
@@ -1106,6 +1116,7 @@ async function loadLaporan(){
     pb.style.display = nPending ? 'inline-block' : 'none';
     pb.textContent = nPending + ' menunggu approval';
     lapPage = 1;
+    renderLapSummary(rows);
     renderLapPage();
   }catch(e){ tbody.innerHTML='<tr><td colspan="7" class="empty">Gagal: '+e.message+'</td></tr>'; }
 }
@@ -1117,6 +1128,43 @@ function lapPageGo(delta){
   const total = Math.max(1, Math.ceil((window._lapRows||[]).length / LAP_PER_PAGE));
   lapPage = Math.min(total, Math.max(1, lapPage + delta));
   renderLapPage();
+}
+// ── Filter cepat periode + ringkasan jumlah laporan ──
+function lapQuick(q, silent){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const ymd = JADWAL.ymd; let a, b;
+  if(q==='hari'){ a=b=ymd(now); }
+  else if(q==='kemarin'){ const d=new Date(now); d.setDate(d.getDate()-1); a=b=ymd(d); }
+  else if(q==='minggu'){ const ws=JADWAL.weekStart(now), we=new Date(ws); we.setDate(we.getDate()+6); a=ymd(ws); b=ymd(we); }
+  else if(q==='bulan'){ a=ymd(new Date(now.getFullYear(),now.getMonth(),1)); b=ymd(new Date(now.getFullYear(),now.getMonth()+1,0)); }
+  else if(q==='bulanlalu'){ a=ymd(new Date(now.getFullYear(),now.getMonth()-1,1)); b=ymd(new Date(now.getFullYear(),now.getMonth(),0)); }
+  document.getElementById('lapDari').value=a; document.getElementById('lapSampai').value=b;
+  lapMarkQuick(q);
+  if(!silent) loadLaporan();
+}
+function lapMarkQuick(q){
+  document.querySelectorAll('.lap-quick').forEach(btn=>{
+    const on = btn.dataset.q===q;
+    btn.classList.toggle('btn-blue', on); btn.classList.toggle('btn-ghost', !on);
+  });
+}
+function renderLapSummary(rows){
+  const box = document.getElementById('lapSummary');
+  const dari = document.getElementById('lapDari').value, sampai = document.getElementById('lapSampai').value;
+  const label = dari && dari===sampai ? new Date(dari+'T00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long'})
+    : (dari||sampai) ? `${dari?LU.fmtDateDDMM(dari):'…'} – ${sampai?LU.fmtDateDDMM(sampai):'…'}` : 'semua tanggal';
+  const pending = rows.filter(r=>r.status==='pending').length;
+  const perGuru = {};
+  rows.forEach(r=>{ const g=r.nama_guru||'—'; perGuru[g]=(perGuru[g]||0)+1; });
+  box.style.display='block';
+  box.innerHTML = `
+    <div class="stat-grid" style="margin-bottom:10px">
+      <div class="stat-card sc-blue"><div class="num">${rows.length}</div><div class="lbl">Total laporan · ${label}</div></div>
+      <div class="stat-card sc-mint"><div class="num">${rows.length-pending}</div><div class="lbl">✅ Approved</div></div>
+      <div class="stat-card sc-pink"><div class="num">${pending}</div><div class="lbl">⏳ Pending</div></div>
+    </div>
+    ${Object.keys(perGuru).length ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${Object.entries(perGuru).sort((a,b)=>b[1]-a[1])
+      .map(([g,n])=>`<span class="badge bg-blue" style="font-size:12px">${g}: <strong>${n}</strong></span>`).join('')}</div>` : ''}`;
 }
 function renderLapPage(){
   const rows = window._lapRows || [];
@@ -1170,7 +1218,7 @@ function kirimLapWA(i){
   const wa = String(waRaw).replace(/\D/g,'');
   if(wa){
     const num = wa.startsWith('62') ? wa : (wa.startsWith('0') ? '62'+wa.slice(1) : '62'+wa);
-    window.open('https://wa.me/'+num+'?text='+encodeURIComponent(txt),'_blank');
+    window.open(LU.waLink(num, txt),'_blank');
   } else {
     navigator.clipboard.writeText(txt);
     showToast('WA ortu kosong — pesan disalin ke clipboard 📋','success');
@@ -1365,7 +1413,7 @@ function kirimInvWA(i){
   const wa = String(waRaw).replace(/\D/g,'');
   if(wa){
     const num = wa.startsWith('62') ? wa : (wa.startsWith('0') ? '62'+wa.slice(1) : '62'+wa);
-    window.open('https://wa.me/'+num+'?text='+encodeURIComponent(txt),'_blank');
+    window.open(LU.waLink(num, txt),'_blank');
   } else {
     navigator.clipboard.writeText(txt);
     showToast('WA ortu kosong — pesan disalin ke clipboard 📋','success');

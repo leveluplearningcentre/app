@@ -500,11 +500,16 @@ const API = {
     return { saved: data.length };
   },
 
-  // Upsert satu baris absensi (dipakai auto-absen dari laporan guru)
+  async deleteAbsensi(kelas_id, tanggal) {
+    await SB.del('absensi', { kelas_id: 'eq.' + kelas_id, tanggal: 'eq.' + tanggal });
+    return { deleted: true };
+  },
+
+  // Upsert satu baris absensi (dipakai auto-absen dari laporan guru & tandai izin)
   async upsertAbsensi(p) {
     const existing = await SB.select('absensi', { tanggal: 'eq.' + p.tanggal, kelas_id: 'eq.' + p.kelas_id });
     if (existing.length) {
-      await SB.update('absensi', { id: 'eq.' + existing[0].id }, { status: p.status || 'hadir' });
+      await SB.update('absensi', { id: 'eq.' + existing[0].id }, _clean({ status: p.status || 'hadir', catatan: p.catatan }));
       return { updated: true };
     }
     await SB.insert('absensi', {
@@ -624,14 +629,19 @@ Berikut kami informasikan billing bulan ${bulan}
 Nama Anak: ${nama}
 Program: ${program}${periode ? `\nPeriode: ${periode}` : ''}${jadwal ? `\nJadwal: ${jadwal}` : ''}
 Jumlah Sesi: ${sesi}
-💰 Rate: ${LU.rp(rate)}/ sesi
-💰 Total: ${LU.rp(total)}
+✦ Rate: ${LU.rp(rate)}/ sesi
+✦ Total: ${LU.rp(total)}
 
 Pembayaran dapat dilakukan melalui:
 ${LU.BANK}
 
-Mohon konfirmasi setelah melakukan pembayaran ya 🙏
-Terima kasih banyak atas kepercayaannya 😊`),
+Mohon konfirmasi setelah melakukan pembayaran ya.
+Terima kasih banyak atas kepercayaannya ✦`),
+  // Emoji sering rusak (jadi �) kalau dikirim lewat link wa.me → hapus, simbol ✦ ★ ☆ • tetap aman
+  waSafe: (txt) => String(txt || '')
+    .replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}\u{1F3FB}-\u{1F3FF}]/gu, '')
+    .replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n').replace(/ {2,}/g, ' ').trim(),
+  waLink: (num, txt) => 'https://wa.me/' + num + '?text=' + encodeURIComponent(LU.waSafe(txt)),
   // Template WA laporan harian
   waLaporan: ({ tanggal, nama, program, tipe, materi, catatan }) => {
     const tglFmt = tanggal
