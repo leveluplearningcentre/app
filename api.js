@@ -405,9 +405,10 @@ const API = {
     if (!samePhone.length) throw new Error('Nomor HP tidak terdaftar. Hubungi admin Level Up ya 🙏');
     const anak = samePhone.filter(m => m.aktif === 'aktif');
     if (!anak.length) throw new Error('Status murid nonaktif — akses portal dimatikan. Hubungi admin Level Up 🙏');
-    const pw = String(anak[0].pin || '');
-    if (!pw) throw new Error('Password belum diset. Hubungi admin Level Up untuk mendapatkan password awal 🙏');
-    if (String(password || '') !== pw) throw new Error('Password salah');
+    // Kakak-adik bisa pakai 1 nomor WA → password salah satu anak diterima
+    const pins = anak.map(m => String(m.pin || '')).filter(Boolean);
+    if (!pins.length) throw new Error('Password belum diset. Hubungi admin Level Up untuk mendapatkan password awal 🙏');
+    if (!pins.includes(String(password || '').trim())) throw new Error('Password salah');
     const kelas = await SB.select('kelas', { aktif: 'eq.aktif' });
     return anak.map(m => ({
       id: m.id, nama: m.nama, grade: m.grade, kelas_sekolah: m.kelas_sekolah,
@@ -440,13 +441,20 @@ const API = {
   },
 
   // ── PASSWORD MANAGEMENT ────────────────────────────────────
+  // Semua murid dengan nomor WA ortu yang sama (kakak-adik)
+  async _saudara(murid_id) {
+    const all = await SB.select('murid');
+    const m = all.find(x => x.id === murid_id);
+    if (!m) throw new Error('Data tidak ditemukan');
+    const ph = _normPhone(m.wa_ortu);
+    return ph ? all.filter(x => _normPhone(x.wa_ortu) === ph) : [m];
+  },
+
   async changeOrtuPassword(murid_id, old_pw, new_pw) {
-    const r = await SB.select('murid', { id: 'eq.' + murid_id });
-    const murid = r[0];
-    if (!murid) throw new Error('Data tidak ditemukan');
-    if (String(murid.pin || '') !== String(old_pw || '')) throw new Error('Password lama salah');
+    const sib = await API._saudara(murid_id);
+    if (!sib.some(m => String(m.pin || '') === String(old_pw || '').trim())) throw new Error('Password lama salah');
     if (!new_pw || String(new_pw).length < 4) throw new Error('Password baru minimal 4 karakter');
-    await SB.update('murid', { id: 'eq.' + murid_id }, { pin: String(new_pw) });
+    await Promise.all(sib.map(m => SB.update('murid', { id: 'eq.' + m.id }, { pin: String(new_pw) })));
     return { ok: true };
   },
 
@@ -460,10 +468,12 @@ const API = {
     return { ok: true };
   },
 
+  // Reset → kakak-adik dgn nomor WA sama ikut dapat password yang sama
   async resetOrtuPassword(murid_id) {
     const pin = String(Math.floor(100000 + Math.random() * 900000));
-    await SB.update('murid', { id: 'eq.' + murid_id }, { pin });
-    return { murid_id, pin };
+    const sib = await API._saudara(murid_id);
+    await Promise.all(sib.map(m => SB.update('murid', { id: 'eq.' + m.id }, { pin })));
+    return { murid_id, pin, saudara: sib.map(m => m.nama) };
   },
 
   async setGuruPassword(guru_id, password) {

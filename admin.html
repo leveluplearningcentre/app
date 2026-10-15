@@ -747,7 +747,8 @@ async function resetOrtuPw(id, nama){
   try{
     const result = await API.resetOrtuPassword(id);
     await refreshBaseData(); renderMurid();
-    showToast(`Password ortu ${nama} direset! Password baru: ${result.pin||result}`, 'success');
+    const sdr = (result.saudara||[]).length > 1 ? ` (berlaku juga utk ${result.saudara.filter(n=>n!==nama).join(', ')})` : '';
+    showToast(`Password ortu ${nama} direset! Password baru: ${result.pin||result}${sdr}`, 'success');
   } catch(e){ showToast('Gagal: '+e.message,'error'); }
 }
 async function setGuruPw(id, nama){
