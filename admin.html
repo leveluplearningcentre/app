@@ -298,9 +298,9 @@ tr:hover td{background:#FFFAF8}
         <button class="btn btn-ghost btn-sm lap-quick" data-q="bulan" onclick="lapQuick('bulan')">Bulan ini</button>
         <button class="btn btn-ghost btn-sm lap-quick" data-q="bulanlalu" onclick="lapQuick('bulanlalu')">Bulan lalu</button>
       </div>
-      <div class="form-grid" style="grid-template-columns:150px 150px 170px 170px 140px 170px auto">
-        <div class="form-field"><label>Dari</label><input type="date" id="lapDari" onchange="lapMarkQuick()"></div>
-        <div class="form-field"><label>Sampai</label><input type="date" id="lapSampai" onchange="lapMarkQuick()"></div>
+      <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(145px,1fr))">
+        <div class="form-field"><label>Dari</label><input type="date" id="lapDari" onchange="lapMarkQuick();loadLaporan()"></div>
+        <div class="form-field"><label>Sampai</label><input type="date" id="lapSampai" onchange="lapMarkQuick();loadLaporan()"></div>
         <div class="form-field"><label>Guru</label><select id="lapGuru"><option value="">Semua guru</option></select></div>
         <div class="form-field"><label>Murid</label><select id="lapMurid"><option value="">Semua murid</option></select></div>
         <div class="form-field"><label>Status</label>
@@ -308,7 +308,7 @@ tr:hover td{background:#FFFAF8}
         <div class="form-field"><label>Urutkan</label>
           <select id="lapSort"><option value="terbaru">Terbaru diinput</option><option value="tgl_desc">Tgl baru → lama</option><option value="tgl_asc">Tgl lama → baru</option></select></div>
         <div class="form-field" style="display:flex;align-items:flex-end">
-          <button class="btn btn-blue" onclick="loadLaporan()">🔍 Filter</button>
+          <button class="btn btn-blue" style="width:100%;justify-content:center" onclick="loadLaporan()">🔍 Filter</button>
         </div>
       </div>
       <div id="lapSummary" style="display:none;margin-bottom:12px"></div>
